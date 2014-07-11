@@ -113,11 +113,15 @@ if not "%JAVA%" == "" goto :Check_JAVA_END
 
 if "%JAVA_OPTS%" == "" set JAVA_OPTS=%DEFAULT_JAVA_OPTS%
 
+if "%EXTRA_JAVA_OPTS%" == "" goto :KARAF_EXTRA_JAVA_OPTS_END
+    set JAVA_OPTS="%EXTRA_JAVA_OPTS% %JAVA_OPTS%"
+:KARAF_EXTRA_JAVA_OPTS_END
+
 if "%KARAF_DEBUG%" == "" goto :KARAF_DEBUG_END
     rem Use the defaults if JAVA_DEBUG_OPTS was not set
     if "%JAVA_DEBUG_OPTS%" == "" set JAVA_DEBUG_OPTS=%DEFAULT_JAVA_DEBUG_OPTS%
     
-    set "JAVA_OPTS=%JAVA_DEBUG_OPTS% %JAVA_OPTS%"
+    set JAVA_OPTS="%JAVA_DEBUG_OPTS% %JAVA_OPTS%"
     call :warn Enabling Java debug options: %JAVA_DEBUG_OPTS%
 :KARAF_DEBUG_END
 
@@ -135,7 +139,11 @@ goto :EOF
 
 :CLASSPATH_END
 
-set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\instance\org.apache.karaf.instance.command\${project.version}\org.apache.karaf.instance.command-${project.version}.jar;%KARAF_HOME%\system\org\apache\karaf\instance\org.apache.karaf.instance.core\${project.version}\org.apache.karaf.instance.core-${project.version}.jar;%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\${project.version}\org.apache.karaf.shell.console-${project.version}.jar;%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.table\${project.version}\org.apache.karaf.shell.table-${project.version}.jar;%KARAF_HOME%\system\org\apache\aries\blueprint\org.apache.aries.blueprint.api\${aries.blueprint.api.version}\org.apache.aries.blueprint.api-${aries.blueprint.api.version}.jar;%KARAF_HOME%\system\org\apache\aries\blueprint\org.apache.aries.blueprint.core\${aries.blueprint.core.version}\org.apache.aries.blueprint.core-${aries.blueprint.core.version}.jar;%KARAF_HOME%\system\org\apache\aries\blueprint\org.apache.aries.blueprint.cm\${aries.blueprint.cm.version}\org.apache.aries.blueprint.cm-${aries.blueprint.cm.version}.jar;%KARAF_HOME%\system\org\ops4j\pax\logging\pax-logging-api\${pax.logging.version}\pax-logging-api-${pax.logging.version}.jar;%KARAF_HOME%\system\org\apache\felix\org.apache.felix.framework\${felix.framework.version}\org.apache.felix.framework-${felix.framework.version}.jar;%KARAF_HOME%\system\jline\jline\${jline.version}\jline-${jline.version}.jar;%CLASSPATH%
+set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\instance\org.apache.karaf.instance.core\${project.version}\org.apache.karaf.instance.core-${project.version}.jar
+set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.core\${project.version}\org.apache.karaf.shell.core-${project.version}.jar
+set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\ops4j\pax\logging\pax-logging-api\${pax.logging.version}\pax-logging-api-${pax.logging.version}.jar
+set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\jline\jline\${jline.version}\jline-${jline.version}.jar
+
 
 :EXECUTE
     if "%SHIFT%" == "true" SET ARGS=%2 %3 %4 %5 %6 %7 %8

@@ -18,7 +18,7 @@
  */
 package org.apache.karaf.main.lock;
 
-import java.util.Properties;
+import org.apache.felix.utils.properties.Properties;
 
 public class LockFactory {
 

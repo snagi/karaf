@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.assemblies.features</groupId>
         <artifactId>features</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -61,7 +61,7 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse</groupId>
-            <artifactId>org.eclipse.osgi</artifactId>
+            <artifactId>osgi</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -82,16 +82,6 @@
 
         <!-- listed in source feature.xml with explicit startlevel -->
         <dependency>
-            <groupId>biz.aQute.bnd</groupId>
-            <artifactId>bndlib</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.ops4j.pax.logging</groupId>
             <artifactId>pax-logging-api</artifactId>
         </dependency>
@@ -100,88 +90,56 @@
             <artifactId>pax-logging-service</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.ops4j.base</groupId>
-            <artifactId>ops4j-base-lang</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.url</groupId>
-            <artifactId>pax-url-maven-commons</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.ops4j.pax.url</groupId>
-                    <artifactId>pax-url-maven-commons</artifactId>
+                    <artifactId>pax-url-commons</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.url</groupId>
-            <artifactId>pax-url-wrap</artifactId>
-            <exclusions>
                 <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-spi</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-connector-basic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.aether</groupId>
+                    <artifactId>aether-transport-wagon</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.maven</groupId>
+                    <artifactId>maven-settings-builder</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.sonatype.plexus</groupId>
+                    <artifactId>plexus-sec-dispatcher</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.sonatype.plexus</groupId>
+                    <artifactId>plexus-cipher</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.ops4j.pax.swissbox</groupId>
-            <artifactId>pax-swissbox-bnd</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
-        <dependency>
-            <groupId>org.apache.karaf.features</groupId>
-            <artifactId>org.apache.karaf.features.command</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.bundle</groupId>
-            <artifactId>org.apache.karaf.bundle.command</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.console</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.help</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.table</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.karaf.system</groupId>
-            <artifactId>org.apache.karaf.system.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.system</groupId>
-            <artifactId>org.apache.karaf.system.command</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.commands</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.fileinstall</artifactId>
@@ -192,43 +150,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-all</artifactId>
+            <groupId>org.apache.karaf.features</groupId>
+            <artifactId>org.apache.karaf.features.core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.cm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.core.compatibility</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.blueprint</groupId>
-            <artifactId>org.apache.aries.blueprint.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.proxy</groupId>
-            <artifactId>org.apache.aries.proxy.api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries.proxy</groupId>
-            <artifactId>org.apache.aries.proxy.impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.aries</groupId>
-            <artifactId>org.apache.aries.util</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.karaf.region</groupId>
-            <artifactId>org.apache.karaf.region.core</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -362,8 +287,8 @@
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.eclipse</groupId>
-                                    <artifactId>org.eclipse.osgi</artifactId>
-                                    <outputDirectory>target/classes/resources/system/org/eclipse/org.eclipse.osgi/${equinox.version}</outputDirectory>
+                                    <artifactId>osgi</artifactId>
+                                    <outputDirectory>target/classes/resources/system/org/eclipse/osgi/${equinox.version}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>org.apache.felix</groupId>
@@ -406,6 +331,11 @@
                             <excludedArtifactIds>
                                 <excludedArtifactId>slf4j-api</excludedArtifactId>
                                 <excludedArtifactId>mina-core</excludedArtifactId>
+                                <excludedArtifactId>sshd-core</excludedArtifactId>
+                                <excludedArtifactId>jline</excludedArtifactId>
+                                <excludedArtifactId>core</excludedArtifactId>
+                                <excludedArtifactId>org.apache.karaf.region.core</excludedArtifactId>
+                                <excludedArtifactId>org.eclipse.equinox.region</excludedArtifactId>
                             </excludedArtifactIds>
                         </configuration>
                     </execution>
@@ -441,39 +371,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>snapshot</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>${project.basedir}/src/main/snapshot</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>**/*</include>
-                        </includes>
-                    </resource>
-                </resources>
-            </build>
-        </profile>
-        <profile>
-            <id>release</id>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>${project.basedir}/src/main/release</directory>
-                        <filtering>false</filtering>
-                        <includes>
-                            <include>**/*</include>
-                        </includes>
-                    </resource>
-                </resources>
-            </build>
-        </profile>
-    </profiles>
 
 </project>

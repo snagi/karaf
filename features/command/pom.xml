@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.features</groupId>
         <artifactId>features</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -49,17 +49,17 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.table</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.karaf.features</groupId>
             <artifactId>org.apache.karaf.features.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.console</artifactId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.equinox</groupId>
+            <artifactId>org.eclipse.equinox.region</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -85,17 +85,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            javax.management,
-                            javax.management.loading,
-                            org.apache.aries.blueprint,
-                            org.osgi.service.blueprint.container,
-                            org.osgi.service.blueprint.reflect,
-                            org.apache.felix.service.command,
-                            org.apache.karaf.shell.commands,
-                            org.apache.karaf.shell.console,
-                            *
-                        </Import-Package>
+                        <Karaf-Commands>org.apache.karaf.features.command.*</Karaf-Commands>
                     </instructions>
                 </configuration>
             </plugin>

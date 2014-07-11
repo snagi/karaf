@@ -20,30 +20,6 @@ import javax.management.openmbean.TabularData;
 
 public interface FeaturesServiceMBean {
 
-    TabularData getFeatures() throws Exception;
-
-    TabularData getRepositories() throws Exception;
-
-    void addRepository(String url) throws Exception;
-
-    void addRepository(String url, boolean install) throws Exception;
-
-    void removeRepository(String url) throws Exception;
-
-    void removeRepository(String url, boolean uninstall) throws Exception;
-
-    void installFeature(String name) throws Exception;
-
-    void installFeature(String name, boolean noClean, boolean noRefresh) throws Exception;
-
-    void installFeature(String name, String version) throws Exception;
-
-    void installFeature(String name, String version, boolean noClean, boolean noRefresh) throws Exception;
-
-    void uninstallFeature(String name) throws Exception;
-
-    void uninstallFeature(String name, String version) throws Exception;
-
     String FEATURE_NAME = "Name";
 
     String FEATURE_VERSION = "Version";
@@ -53,7 +29,7 @@ public interface FeaturesServiceMBean {
     String FEATURE_BUNDLES = "Bundles";
 
     String FEATURE_CONFIGURATIONS = "Configurations";
-    
+
     String FEATURE_CONFIGURATIONFILES = "Configuration Files";
 
     String FEATURE_INSTALLED = "Installed";
@@ -62,7 +38,7 @@ public interface FeaturesServiceMBean {
     String FEATURE_CONFIG_ELEMENTS = "Elements";
     String FEATURE_CONFIG_ELEMENT_KEY = "Key";
     String FEATURE_CONFIG_ELEMENT_VALUE = "Value";
-    
+
     String FEATURE_CONFIG_FILES_ELEMENTS = "Files";
 
     /**
@@ -76,25 +52,27 @@ public interface FeaturesServiceMBean {
 
     String FEATURE_EVENT_EVENT_TYPE_UNINSTALLED = "Uninstalled";
 
+    String FEATURE_EVENT_REGION = "Region";
+
     /**
      * The item names in the CompositeData representing a feature
      */
-    String[] FEATURE = { FEATURE_NAME, FEATURE_VERSION, FEATURE_DEPENDENCIES, FEATURE_BUNDLES,
-                         FEATURE_CONFIGURATIONS, FEATURE_CONFIGURATIONFILES, FEATURE_INSTALLED };
+    String[] FEATURE = {FEATURE_NAME, FEATURE_VERSION, FEATURE_DEPENDENCIES, FEATURE_BUNDLES,
+        FEATURE_CONFIGURATIONS, FEATURE_CONFIGURATIONFILES, FEATURE_INSTALLED};
 
-    String[] FEATURE_IDENTIFIER = { FEATURE_NAME, FEATURE_VERSION };
+    String[] FEATURE_IDENTIFIER = {FEATURE_NAME, FEATURE_VERSION};
 
-    String[] FEATURE_CONFIG = { FEATURE_CONFIG_PID, FEATURE_CONFIG_ELEMENTS };
-    
-    String[] FEATURE_CONFIG_FILES = { FEATURE_CONFIG_FILES_ELEMENTS };
+    String[] FEATURE_CONFIG = {FEATURE_CONFIG_PID, FEATURE_CONFIG_ELEMENTS};
 
-    String[] FEATURE_CONFIG_ELEMENT = { FEATURE_CONFIG_ELEMENT_KEY, FEATURE_CONFIG_ELEMENT_VALUE };
+    String[] FEATURE_CONFIG_FILES = {FEATURE_CONFIG_FILES_ELEMENTS};
+
+    String[] FEATURE_CONFIG_ELEMENT = {FEATURE_CONFIG_ELEMENT_KEY, FEATURE_CONFIG_ELEMENT_VALUE};
 
     /**
      * The item names in the CompositeData representing the event raised for
      * feature events within the OSGi container by this bean
      */
-    String[] FEATURE_EVENT = { FEATURE_NAME, FEATURE_VERSION, FEATURE_EVENT_EVENT_TYPE };
+    String[] FEATURE_EVENT = {FEATURE_NAME, FEATURE_VERSION, FEATURE_EVENT_REGION, FEATURE_EVENT_EVENT_TYPE};
 
 
     String REPOSITORY_NAME = "Name";
@@ -119,12 +97,48 @@ public interface FeaturesServiceMBean {
     /**
      * The item names in the CompositeData representing a feature
      */
-    String[] REPOSITORY = { REPOSITORY_NAME, REPOSITORY_URI,  REPOSITORY_REPOSITORIES, REPOSITORY_FEATURES };
+    String[] REPOSITORY = {REPOSITORY_NAME, REPOSITORY_URI, REPOSITORY_REPOSITORIES, REPOSITORY_FEATURES};
 
     /**
      * The item names in the CompositeData representing the event raised for
      * feature events within the OSGi container by this bean
      */
-    String[] REPOSITORY_EVENT = { REPOSITORY_NAME, REPOSITORY_URI, REPOSITORY_EVENT_EVENT_TYPE };
+    String[] REPOSITORY_EVENT = {REPOSITORY_URI, REPOSITORY_EVENT_EVENT_TYPE};
+
+    TabularData getFeatures() throws Exception;
+
+    TabularData getRepositories() throws Exception;
+
+    void addRepository(String url) throws Exception;
+
+    void addRepository(String url, boolean install) throws Exception;
+
+    void removeRepository(String url) throws Exception;
+
+    void removeRepository(String url, boolean uninstall) throws Exception;
+
+    void installFeature(String name) throws Exception;
+
+    void installFeature(String name, boolean noRefresh) throws Exception;
+
+    void installFeature(String name, boolean noRefresh, boolean noStart) throws Exception;
+
+    void installFeature(String name, String version) throws Exception;
+
+    void installFeature(String name, String version, boolean noRefresh) throws Exception;
+
+    void installFeature(String name, String version, boolean noRefresh, boolean noStart) throws Exception;
+
+    TabularData infoFeature(String name) throws Exception;
+
+    TabularData infoFeature(String name, String version) throws Exception;
+
+    void uninstallFeature(String name) throws Exception;
+
+    void uninstallFeature(String name, boolean noRefresh) throws Exception;
+
+    void uninstallFeature(String name, String version) throws Exception;
+
+    void uninstallFeature(String name, String version, boolean noRefresh) throws Exception;
 
 }

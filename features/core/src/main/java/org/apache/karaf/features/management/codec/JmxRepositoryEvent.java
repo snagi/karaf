@@ -17,8 +17,8 @@
 package org.apache.karaf.features.management.codec;
 
 import javax.management.openmbean.CompositeData;
-import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
@@ -36,12 +36,16 @@ public class JmxRepositoryEvent {
         try {
             String[] itemNames = FeaturesServiceMBean.REPOSITORY_EVENT;
             Object[] itemValues = new Object[itemNames.length];
-            itemValues[0] = event.getRepository().getName();
-            itemValues[1] = event.getRepository().getURI().toString();
+            itemValues[0] = event.getRepository().getURI().toString();
             switch (event.getType()) {
-                case RepositoryAdded:   itemValues[2] = FeaturesServiceMBean.REPOSITORY_EVENT_EVENT_TYPE_ADDED; break;
-                case RepositoryRemoved: itemValues[2] = FeaturesServiceMBean.REPOSITORY_EVENT_EVENT_TYPE_REMOVED; break;
-                default: throw new IllegalStateException("Unsupported event type: " + event.getType());
+            case RepositoryAdded:
+                itemValues[1] = FeaturesServiceMBean.REPOSITORY_EVENT_EVENT_TYPE_ADDED;
+                break;
+            case RepositoryRemoved:
+                itemValues[1] = FeaturesServiceMBean.REPOSITORY_EVENT_EVENT_TYPE_REMOVED;
+                break;
+            default:
+                throw new IllegalStateException("Unsupported event type: " + event.getType());
             }
             data = new CompositeDataSupport(REPOSITORY_EVENT, itemNames, itemValues);
         } catch (OpenDataException e) {
@@ -65,11 +69,9 @@ public class JmxRepositoryEvent {
             String[] itemDescriptions = new String[itemNames.length];
             itemTypes[0] = SimpleType.STRING;
             itemTypes[1] = SimpleType.STRING;
-            itemTypes[2] = SimpleType.STRING;
 
-            itemDescriptions[0] = "The name of the repository";
-            itemDescriptions[1] = "The uri of the repository";
-            itemDescriptions[2] = "The type of event";
+            itemDescriptions[0] = "The uri of the repository";
+            itemDescriptions[1] = "The type of event";
 
             return new CompositeType("RepositoryEvent", description, itemNames,
                     itemDescriptions, itemTypes);

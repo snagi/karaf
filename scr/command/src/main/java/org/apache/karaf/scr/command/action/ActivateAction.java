@@ -16,28 +16,31 @@
  */
 package org.apache.karaf.scr.command.action;
 
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
+import org.apache.karaf.scr.command.completer.ActivateCompleter;
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
 import org.apache.karaf.scr.command.ScrCommandConstants;
 import org.apache.karaf.scr.command.ScrUtils;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Completion;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
 
 /**
  * Activates the given component by supplying its component name.
  */
 @Command(scope = ScrCommandConstants.SCR_COMMAND, name = ScrCommandConstants.ACTIVATE_FUNCTION, description = "Activates a Component for the given name")
+@Service
 public class ActivateAction extends ScrActionSupport {
 
     @Argument(index = 0, name = "name", description = "The name of the Component to activate ", required = true, multiValued = false)
+    @Completion(ActivateCompleter.class)
     String name;
 
     @Override
     protected Object doScrAction(ScrService scrService) throws Exception {
-        if(logger.isDebugEnabled()){
-            logger.debug("Activate Action");
-            logger.debug("  Activating the Component: " + name);
-        }
+        logger.debug("Activate Action");
+        logger.debug("  Activating the Component: " + name);
         Component[] components = scrService.getComponents(name);
         for (Component component : ScrUtils.emptyIfNull(Component.class, components)) {
             component.enable();

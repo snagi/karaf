@@ -22,27 +22,28 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import jline.Terminal;
-
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.commands.Option;
-import jline.console.ConsoleReader;
-import org.apache.karaf.shell.console.OsgiCommandSupport;
-import org.apache.karaf.shell.console.SessionProperties;
+import org.apache.karaf.shell.api.action.Action;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.api.console.Terminal;
 import org.apache.sshd.ClientChannel;
 import org.apache.sshd.ClientSession;
 import org.apache.sshd.SshClient;
 import org.apache.sshd.agent.SshAgent;
+import org.apache.sshd.client.UserInteraction;
 import org.apache.sshd.client.channel.ChannelShell;
-import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.common.util.NoCloseInputStream;
 import org.apache.sshd.common.util.NoCloseOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Command(scope = "ssh", name = "ssh", description = "Connects to a remote SSH server")
-public class SshAction extends OsgiCommandSupport {
+@Service
+public class SshAction implements Action {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Option(name="-l", aliases={"--username"}, description = "The user name for remote login", required = false, multiValued = false)
@@ -63,9 +64,11 @@ public class SshAction extends OsgiCommandSupport {
     @Argument(index = 1, name = "command", description = "Optional command to execute", required = false, multiValued = true)
     private List<String> command;
 
-	private ClientSession sshSession;
+    @Reference
+    private Session session;
 
-	private SshClientFactory sshClientFactory;
+    @Reference
+    private SshClientFactory sshClientFactory;
 
     private final static String keyChangedMessage =
             " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ \n" +
@@ -85,7 +88,7 @@ public class SshAction extends OsgiCommandSupport {
 	}
 
 	@Override
-    protected Object doExecute() throws Exception {
+    public Object execute() throws Exception {
 
         if (hostname.indexOf('@') >= 0) {
             if (username == null) {
@@ -104,7 +107,7 @@ public class SshAction extends OsgiCommandSupport {
         if (username == null) {
             log.debug("Prompting user for login");
             if (username == null) {
-                username = readLine("Login: ");
+                username = session.readLine("Login: ", null);
             }
         }
 
@@ -117,57 +120,36 @@ public class SshAction extends OsgiCommandSupport {
             agentSocket = this.session.get(SshAgent.SSH_AUTHSOCKET_ENV_NAME).toString();
             client.getProperties().put(SshAgent.SSH_AUTHSOCKET_ENV_NAME,agentSocket);
         }
+        client.setUserInteraction(new UserInteraction() {
+            public void welcome(String banner) {
+                System.out.println(banner);
+            }
+            public String[] interactive(String destination, String name, String instruction, String[] prompt, boolean[] echo) {
+                String[] answers = new String[prompt.length];
+                try {
+                    for (int i = 0; i < prompt.length; i++) {
+                        answers[i] = session.readLine(prompt[i] + " ", echo[i] ? null : '*');
+                    }
+                } catch (IOException e) {
+                }
+                return answers;
+            }
+        });
 
         try {
-            ConnectFuture future = client.connect(hostname, port);
-            future.await();
-            sshSession = future.getSession();
+            ClientSession sshSession = client.connect(username, hostname, port).await().getSession();
 
-            Object oldIgnoreInterrupts = this.session.get(SessionProperties.IGNORE_INTERRUPTS);
+            Object oldIgnoreInterrupts = this.session.get(Session.IGNORE_INTERRUPTS);
 
             try {
 
-                boolean authed = false;
-                if (agentSocket != null) {
-                    try {
-                        sshSession.authAgent(username);
-                    } catch (IllegalStateException ise) {
-                        System.err.println(keyChangedMessage);
-                        return null;
-                    }
-                    int ret = sshSession.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
-                    if ((ret & ClientSession.AUTHED) == 0) {
-                        System.err.println("Agent authentication failed, falling back to password authentication.");
-                    } else {
-                        authed = true;
-                    }
+                if (password != null) {
+                    sshSession.addPasswordIdentity(password);
                 }
-                if (!authed) {
-                    if (password == null) {
-                        log.debug("Prompting user for password");
-                        password = readLine("Password: ");
-                    } else {
-                        log.debug("Password provided using command line option");
-                    }
-                    try {
-                        sshSession.authPassword(username, password);
-                    } catch (IllegalStateException ise) {
-                        System.err.println(keyChangedMessage);
-                        return null;
-                    }
-                    int ret = sshSession.waitFor(ClientSession.WAIT_AUTH | ClientSession.CLOSED | ClientSession.AUTHED, 0);
-                    if ((ret & ClientSession.AUTHED) == 0) {
-                        System.err.println("Password authentication failed");
-                    } else {
-                        authed = true;
-                    }
-                }
-                if (!authed) {
-                    return null;
-                }
+                sshSession.auth().verify();
 
                 System.out.println("Connected");
-                this.session.put( SessionProperties.IGNORE_INTERRUPTS, Boolean.TRUE );
+                this.session.put( Session.IGNORE_INTERRUPTS, Boolean.TRUE );
 
                 StringBuilder sb = new StringBuilder();
                 if (command != null) {
@@ -196,10 +178,10 @@ public class SshAction extends OsgiCommandSupport {
                 }
                 channel.setOut(new NoCloseOutputStream(System.out));
                 channel.setErr(new NoCloseOutputStream(System.err));
-                channel.open();
+                channel.open().verify();
                 channel.waitFor(ClientChannel.CLOSED, 0);
             } finally {
-                session.put( SessionProperties.IGNORE_INTERRUPTS, oldIgnoreInterrupts );
+                session.put( Session.IGNORE_INTERRUPTS, oldIgnoreInterrupts );
                 sshSession.close(false);
             }
         } finally {
@@ -210,17 +192,8 @@ public class SshAction extends OsgiCommandSupport {
     }
 
     private int getTermWidth() {
-        Terminal term = (Terminal) session.get(".jline.terminal");
+        Terminal term = session.getTerminal();
         return term != null ? term.getWidth() : 80;
-    }
-
-    public String readLine(String msg) throws IOException {
-        return readLine(msg, null);
-    }
-
-    public String readLine(String msg, Character mask) throws IOException {
-        ConsoleReader reader = (ConsoleReader) session.get(".jline.reader");
-        return reader.readLine(msg, mask);
     }
 
 }

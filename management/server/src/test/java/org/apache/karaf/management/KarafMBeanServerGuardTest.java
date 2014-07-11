@@ -18,6 +18,7 @@ package org.apache.karaf.management;
 
 import junit.framework.TestCase;
 import org.apache.karaf.jaas.boot.principal.RolePrincipal;
+import org.apache.karaf.util.jaas.JaasHelper;
 import org.easymock.EasyMock;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -375,6 +376,8 @@ public class KarafMBeanServerGuardTest extends TestCase {
         }
         EasyMock.expect(ca.listConfigurations(EasyMock.eq("(service.pid=jmx.acl*)"))).andReturn(
                 allConfigs.toArray(new Configuration[]{})).anyTimes();
+        EasyMock.expect(ca.listConfigurations(EasyMock.eq("(service.pid=jmx.acl.whitelist)"))).andReturn(
+                allConfigs.toArray(new Configuration[]{})).anyTimes();
         EasyMock.replay(ca);
         return ca;
     }
@@ -384,8 +387,8 @@ public class KarafMBeanServerGuardTest extends TestCase {
 
         Subject.doAs(subject, new PrivilegedAction<Void>() {
             public Void run() {
-                assertTrue(KarafMBeanServerGuard.currentUserHasRole("test"));
-                assertFalse(KarafMBeanServerGuard.currentUserHasRole("toast"));
+                assertTrue(JaasHelper.currentUserHasRole("test"));
+                assertFalse(JaasHelper.currentUserHasRole("toast"));
                 return null;
             }
         });
@@ -400,8 +403,8 @@ public class KarafMBeanServerGuardTest extends TestCase {
 
         Subject.doAs(subject, new PrivilegedAction<Void>() {
             public Void run() {
-                assertTrue(KarafMBeanServerGuard.currentUserHasRole(TestRolePrincipal.class.getCanonicalName() + ":foo"));
-                assertFalse(KarafMBeanServerGuard.currentUserHasRole("foo"));
+                assertTrue(JaasHelper.currentUserHasRole(TestRolePrincipal.class.getCanonicalName() + ":foo"));
+                assertFalse(JaasHelper.currentUserHasRole("foo"));
                 return null;
             }
         });

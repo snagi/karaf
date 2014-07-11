@@ -24,18 +24,93 @@
     <parent>
         <groupId>org.apache.karaf</groupId>
         <artifactId>karaf</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.karaf.obr</groupId>
-    <artifactId>obr</artifactId>
-    <packaging>pom</packaging>
-    <name>Apache Karaf :: OBR</name>
+    <artifactId>org.apache.karaf.obr.core</artifactId>
+    <packaging>bundle</packaging>
+    <name>Apache Karaf :: OBR :: Core</name>
+    <description>OBR core services and MBeans</description>
 
-    <modules>
-        <module>core</module>
-        <module>command</module>
-    </modules>
+    <properties>
+        <appendedResourcesDirectory>${basedir}/../../../etc/appended-resources/</appendedResourcesDirectory>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.bundlerepository</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.karaf</groupId>
+            <artifactId>org.apache.karaf.util</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.karaf.shell</groupId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.info</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.karaf.tooling</groupId>
+                <artifactId>karaf-services-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.karaf.obr.core
+                        </Export-Package>
+                        <Private-Package>
+                            org.apache.karaf.obr.command,
+                            org.apache.karaf.obr.command.util,
+                            org.apache.karaf.obr.core.internal,
+                            org.apache.karaf.obr.core.internal.osgi,
+                            org.apache.karaf.util.tracker
+                        </Private-Package>
+                        <Provide-Capability>
+                            ${capabilities}
+                        </Provide-Capability>
+                        <Require-Capability>
+                            ${requirements}
+                        </Require-Capability>
+                        <Bundle-Activator>
+                            org.apache.karaf.obr.core.internal.osgi.Activator
+                        </Bundle-Activator>
+                        <Karaf-Commands>*</Karaf-Commands>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -27,18 +27,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.commands.Option;
-import org.apache.karaf.shell.console.AbstractAction;
-import org.apache.karaf.shell.table.ShellTable;
+import org.apache.karaf.shell.api.action.Action;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.support.table.ShellTable;
 
 /**
  * Command for showing the full tree of bundles that have been used to resolve
  * a given bundle.
  */
 @Command(scope = "shell", name = "threads", description = "Prints the current threads (optionally with stacktraces)")
-public class ThreadsAction extends AbstractAction {
+@Service
+public class ThreadsAction implements Action {
 
     @Option(name = "--tree" , description = "Display threads as a tree")
     boolean tree = false;
@@ -68,7 +70,7 @@ public class ThreadsAction extends AbstractAction {
     boolean noFormat;
 
     @Override
-    protected Object doExecute() throws Exception {
+    public Object execute() throws Exception {
         Map<Long, ThreadInfo> threadInfos = new TreeMap<Long, ThreadInfo>();
         ThreadMXBean threadsBean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] infos;
@@ -116,7 +118,6 @@ public class ThreadsAction extends AbstractAction {
             ThreadGroupData data = new ThreadGroupData(group, threadInfos);
             data.print();
         }
-
         return null;
     }
 

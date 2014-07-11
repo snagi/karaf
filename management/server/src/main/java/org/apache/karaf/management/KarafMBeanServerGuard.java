@@ -16,9 +16,9 @@
  */
 package org.apache.karaf.management;
 
-import org.apache.karaf.jaas.boot.principal.RolePrincipal;
 import org.apache.karaf.management.boot.KarafMBeanServerBuilder;
 import org.apache.karaf.service.guard.tools.ACLConfigurationParser;
+import org.apache.karaf.util.jaas.JaasHelper;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -32,10 +32,16 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.Principal;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class KarafMBeanServerGuard implements InvocationHandler {
 
     private static final String JMX_ACL_PID_PREFIX = "jmx.acl";
+    
+    private static final String JMX_ACL_WHITELIST = "jmx.acl.whitelist";
+
+
+    private static final String JMX_OBJECTNAME_PROPERTY_WILDCARD = "_";
 
     private ConfigurationAdmin configAdmin;
 
@@ -170,8 +176,11 @@ public class KarafMBeanServerGuard implements InvocationHandler {
     }
 
     private boolean canInvoke(ObjectName objectName, String methodName, String[] signature) throws IOException {
+        if (canBypassRBAC(objectName)) {
+            return true;
+        }
         for (String role : getRequiredRoles(objectName, methodName, signature)) {
-            if (currentUserHasRole(role))
+            if (JaasHelper.currentUserHasRole(role))
                 return true;
         }
 
@@ -220,9 +229,40 @@ public class KarafMBeanServerGuard implements InvocationHandler {
         }
     }
 
+    private boolean canBypassRBAC(ObjectName objectName) {
+        List<String> allBypassObjectName = new ArrayList<String>();
+        try {
+            Configuration[] configs = configAdmin.listConfigurations("(service.pid=" + JMX_ACL_WHITELIST + ")");
+            if (configs != null) {
+                for (Configuration config : configs) {
+                    Enumeration<String> keys = config.getProperties().keys();
+                    while (keys.hasMoreElements()) {
+                        String element = keys.nextElement();
+                        allBypassObjectName.add(element);
+                    }
+                }
+            }
+        } catch (InvalidSyntaxException ise) {
+            throw new RuntimeException(ise);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } 
+
+        for (String pid : iterateDownPids(getNameSegments(objectName))) {
+            if (!pid.equals("jmx.acl") 
+                && allBypassObjectName.contains(pid.substring("jmx.acl.".length()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void handleInvoke(ObjectName objectName, String operationName, Object[] params, String[] signature) throws IOException {
+        if (canBypassRBAC(objectName)) {
+            return;
+        }
         for (String role : getRequiredRoles(objectName, operationName, params, signature)) {
-            if (currentUserHasRole(role))
+            if (JaasHelper.currentUserHasRole(role))
                 return;
         }
         throw new SecurityException("Insufficient roles/credentials for operation");
@@ -244,8 +284,9 @@ public class KarafMBeanServerGuard implements InvocationHandler {
         }
 
         for (String pid : iterateDownPids(getNameSegments(objectName))) {
-            if (allPids.contains(pid)) {
-                Configuration config = configAdmin.getConfiguration(pid);
+            String generalPid = getGeneralPid(allPids, pid);
+            if (generalPid.length() > 0) {
+                Configuration config = configAdmin.getConfiguration(generalPid);        
                 List<String> roles = new ArrayList<String>();
                 ACLConfigurationParser.Specificity s = ACLConfigurationParser.getRolesForInvocation(methodName, params, signature, config.getProperties(), roles);
                 if (s != ACLConfigurationParser.Specificity.NO_MATCH) {
@@ -256,20 +297,50 @@ public class KarafMBeanServerGuard implements InvocationHandler {
         return Collections.emptyList();
     }
 
+    private String getGeneralPid(List<String> allPids, String pid) {
+        String ret = "";
+        String[] pidStrArray = pid.split(Pattern.quote("."));
+        for (String id : allPids) {
+            String[] idStrArray = id.split(Pattern.quote("."));
+            if (idStrArray.length == pidStrArray.length) {
+                boolean match = true;
+                for (int i = 0; i < idStrArray.length; i++) {
+                    if (idStrArray[i].equals(JMX_OBJECTNAME_PROPERTY_WILDCARD) 
+                        || idStrArray[i].equals(pidStrArray[i])) {
+                        continue;
+                    } else {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    ret = id;
+                    return ret;
+                }
+            }
+        }
+        
+        return ret;
+    }
+
     private List<String> getNameSegments(ObjectName objectName) {
         List<String> segments = new ArrayList<String>();
         segments.add(objectName.getDomain());
-
         // TODO can an ObjectName property contain a comma as key or value ?
         // TODO support quoting as described in http://docs.oracle.com/javaee/1.4/api/javax/management/ObjectName.html
         for (String s : objectName.getKeyPropertyListString().split("[,]")) {
             int index = s.indexOf('=');
-            if (index < 0)
+            if (index < 0) {
                 continue;
-
-            segments.add(objectName.getKeyProperty(s.substring(0, index)));
+            }
+            String key = objectName.getKeyProperty(s.substring(0, index));
+            if (s.substring(0, index).equals("type")) {
+                segments.add(1, key);
+            } else {
+                segments.add(key);
+            }
         }
-
+        
         return segments;
     }
 
@@ -299,37 +370,6 @@ public class KarafMBeanServerGuard implements InvocationHandler {
         }
         res.add(JMX_ACL_PID_PREFIX); // this is the top PID (aka jmx.acl)
         return res;
-    }
-
-    static boolean currentUserHasRole(String requestedRole) {
-        String clazz;
-        String role;
-        int index = requestedRole.indexOf(':');
-        if (index > 0) {
-            clazz = requestedRole.substring(0, index);
-            role = requestedRole.substring(index + 1);
-        } else {
-            clazz = RolePrincipal.class.getName();
-            role = requestedRole;
-        }
-
-        AccessControlContext acc = AccessController.getContext();
-        if (acc == null) {
-            return false;
-        }
-        Subject subject = Subject.getSubject(acc);
-
-        if (subject == null) {
-            return false;
-        }
-
-        for (Principal p : subject.getPrincipals()) {
-            if (clazz.equals(p.getClass().getName()) && role.equals(p.getName())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
 }

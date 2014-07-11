@@ -21,8 +21,12 @@ import org.apache.felix.scr.Reference;
 import org.apache.felix.scr.ScrService;
 import org.apache.karaf.scr.command.ScrCommandConstants;
 import org.apache.karaf.scr.command.ScrUtils;
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
+import org.apache.karaf.scr.command.completer.DetailsCompleter;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Completion;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.support.ansi.SimpleAnsi;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
@@ -30,12 +34,14 @@ import org.osgi.service.component.ComponentConstants;
 import java.util.Hashtable;
 
 /**
- * Displays the details associated with a given component by supplying its component name.
+ * Display the details associated with a given component by supplying its component name.
  */
-@Command(scope = ScrCommandConstants.SCR_COMMAND, name = ScrCommandConstants.DETAILS_FUNCTION, description = "Displays a list of available components")
+@Command(scope = ScrCommandConstants.SCR_COMMAND, name = ScrCommandConstants.DETAILS_FUNCTION, description = "Display available components")
+@Service
 public class DetailsAction extends ScrActionSupport {
 
-    @Argument(index = 0, name = "name", description = "The name of the Component to display the detials of", required = true, multiValued = false)
+    @Argument(index = 0, name = "name", description = "The component name", required = true, multiValued = false)
+    @Completion(DetailsCompleter.class)
     String name;
 
     @SuppressWarnings("rawtypes")
@@ -44,7 +50,7 @@ public class DetailsAction extends ScrActionSupport {
         if (logger.isDebugEnabled()) {
             logger.debug("Executing the Details Action");
         }
-        System.out.println(getBoldString("Component Details"));
+        System.out.println(SimpleAnsi.INTENSITY_BOLD + "Component Details" + SimpleAnsi.INTENSITY_NORMAL);
         Component[] components = scrService.getComponents(name);
         for (Component component : ScrUtils.emptyIfNull(Component.class, components)) {
             printDetail("  Name                : ", component.getName());
@@ -52,14 +58,14 @@ public class DetailsAction extends ScrActionSupport {
 
             Hashtable props = (Hashtable)component.getProperties();
             if (!props.isEmpty()) {
-                System.out.println(getBoldString("  Properties          : "));
+                System.out.println(SimpleAnsi.INTENSITY_BOLD + "  Properties          : " + SimpleAnsi.INTENSITY_NORMAL);
                 for (Object key : props.keySet()) {
                     Object value = props.get(key);
                     printDetail("    ", key + "=" + value);
                 }
             }
             Reference[] references = component.getReferences();
-            System.out.println(getBoldString("References"));
+            System.out.println(SimpleAnsi.INTENSITY_BOLD + "References" + SimpleAnsi.INTENSITY_NORMAL);
 
             for (Reference reference : ScrUtils.emptyIfNull(Reference.class, references)) {
                 printDetail("  Reference           : ", reference.getName());
@@ -90,7 +96,7 @@ public class DetailsAction extends ScrActionSupport {
                     printDetail("    Service Reference : ", b.toString());
                 }
                 
-                if(ScrUtils.emptyIfNull(ServiceReference.class, boundRefs).length == 0) {
+                if (ScrUtils.emptyIfNull(ServiceReference.class, boundRefs).length == 0) {
                     printDetail("    Service Reference : ", "No Services bound");
                 }
             }
@@ -101,7 +107,7 @@ public class DetailsAction extends ScrActionSupport {
     }
 
     private void printDetail(String header, String value) {
-        System.out.println(getBoldString(header) + value);
+        System.out.println(SimpleAnsi.INTENSITY_BOLD + header + SimpleAnsi.INTENSITY_NORMAL + value);
     }
 
 }

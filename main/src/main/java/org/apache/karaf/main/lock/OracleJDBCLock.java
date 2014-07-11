@@ -20,7 +20,7 @@ package org.apache.karaf.main.lock;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Properties;
+import org.apache.felix.utils.properties.Properties;
 
 /**
  * Represents an exclusive lock on a database,

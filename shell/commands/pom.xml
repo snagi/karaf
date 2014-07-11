@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.shell</groupId>
         <artifactId>shell</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -40,22 +40,12 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.console</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.table</artifactId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jledit</groupId>
             <artifactId>core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.karaf</groupId>
             <artifactId>org.apache.karaf.util</artifactId>
@@ -106,13 +96,22 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                        	!org.apache.karaf.shell.commands.impl*
+                        	org.apache.karaf.shell.commands.info;-noimport:=true
                         </Export-Package>
                         <Private-Package>
                             org.apache.karaf.util.process;-split-package:=merge-first,
                             org.apache.karaf.util;-split-package:=merge-first,
                             org.apache.karaf.shell.commands.impl*
                         </Private-Package>
+                        <Bundle-Activator>
+                            org.apache.karaf.shell.commands.impl.info.Activator
+                        </Bundle-Activator>
+                        <Require-Capability>
+                            osgi.service;filter:="(objectClass=org.jledit.EditorFactory)";effective:=active
+                        </Require-Capability>
+                        <Karaf-Commands>
+                            org.apache.karaf.shell.commands.impl
+                        </Karaf-Commands>
                     </instructions>
                 </configuration>
             </plugin>

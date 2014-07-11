@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.jaas</groupId>
         <artifactId>jaas</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -52,6 +52,11 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.utils</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.fileinstall</artifactId>
         </dependency>
 
         <dependency>
@@ -83,6 +88,24 @@
             <artifactId>org.apache.aries.blueprint.api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.directory.server</groupId>
+            <artifactId>apacheds-core-integ</artifactId>
+            <version>${directory-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.directory.server</groupId>
+            <artifactId>apacheds-server-integ</artifactId>
+            <version>${directory-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>${derby-version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -109,15 +132,17 @@
                     <instructions>
                         <Import-Package>
                             javax.net,
-                            org.apache.aries.blueprint,
-                            org.osgi.service.blueprint.container,
-                            org.osgi.service.blueprint.reflect,
                             org.apache.karaf.jaas.config,
+                            org.osgi.service.event;resolution:=optional,
                             *
                         </Import-Package>
                         <Private-Package>
+                            org.apache.karaf.jaas.modules.impl,
                             org.apache.felix.utils.properties
                         </Private-Package>
+                        <Bundle-Activator>
+                            org.apache.karaf.jaas.modules.impl.Activator
+                        </Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>

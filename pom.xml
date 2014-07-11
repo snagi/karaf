@@ -24,14 +24,14 @@
     <parent>
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
-        <version>13</version>
+        <version>14</version>
         <relativePath />
     </parent>
 
     <groupId>org.apache.karaf</groupId>
     <artifactId>karaf</artifactId>
     <packaging>pom</packaging>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <name>Apache Karaf</name>
     <inceptionYear>2007</inceptionYear>
 
@@ -40,7 +40,6 @@
         <module>main</module>
         <module>features</module>
         <module>kar</module>
-        <module>region</module>
         <module>bundle</module>
         <module>config</module>
         <module>instance</module>
@@ -65,11 +64,14 @@
         <module>jndi</module>
         <module>jdbc</module>
         <module>jms</module>
+        <module>jpa</module>
         <module>tooling</module>
         <module>assemblies</module>
         <module>demos</module>
         <module>archetypes</module>
         <module>itests</module>
+        <module>services</module>
+        <module>subsystem</module>
     </modules>
 
     <scm>
@@ -124,7 +126,7 @@
         <aspectj.bundle.version>1.7.4_1</aspectj.bundle.version>
         <ant.bundle.version>1.8.2_2</ant.bundle.version>
         <antlr.bundle.version>2.7.7_5</antlr.bundle.version>
-        <asm.version>4.1</asm.version>
+        <asm.version>5.0.3</asm.version>
         <asm.springsource.version>1.5.3</asm.springsource.version>
         <cglib.bundle.version>3.0_1</cglib.bundle.version>
         <cglib2.version>2.2.0</cglib2.version>
@@ -132,13 +134,13 @@
         <commons-codec.version>1.9</commons-codec.version>
         <commons-collections.version>3.2.1</commons-collections.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
-        <commons-fileupload.version>1.2.2</commons-fileupload.version>
+        <commons-fileupload.version>1.3.1</commons-fileupload.version>
         <commons-io.version>2.4</commons-io.version>
         <commons-jexl.version>2.1.1</commons-jexl.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-pool.version>1.6</commons-pool.version>
         <dom4j.bundle.version>1.6.1_5</dom4j.bundle.version>
-        <jasypt.bundle.version>1.9.1_1</jasypt.bundle.version>
+        <jasypt.bundle.version>1.9.2_1</jasypt.bundle.version>
         <serp.bundle.version>1.14.1_1</serp.bundle.version>
         <servlet.spec.groupId>org.apache.geronimo.specs</servlet.spec.groupId>
         <servlet.spec.artifactId>geronimo-servlet_3.0_spec</servlet.spec.artifactId>
@@ -148,19 +150,21 @@
         <geronimo.jpa-spec.version>1.1</geronimo.jpa-spec.version>
         <geronimo.jta-spec.version>1.1.1</geronimo.jta-spec.version>
         <geronimo.annotation-spec.version>1.0.1</geronimo.annotation-spec.version>
+        <geronimo.atinject-spec.version>1.0</geronimo.atinject-spec.version>
         <geronimo.jaspic-spec.version>1.1</geronimo.jaspic-spec.version>
         <easymock.version>3.2</easymock.version>
-        <equinox.version>3.8.2.v20130124-134944</equinox.version>
+        <equinox.version>3.9.1-v20140110-1610</equinox.version>
         <bndlib.version>2.2.0</bndlib.version>
-        <equinox.region.version>1.0.0.v20110506</equinox.region.version>
+        <equinox.region.version>1.1.0.v20120522-1841</equinox.region.version>
+        <equinox.coordinator.version>1.1.0.v20120522-1841</equinox.coordinator.version>
         <felix.bundlerepository.version>1.6.6</felix.bundlerepository.version>
-        <felix.configadmin.version>1.6.0</felix.configadmin.version>
-        <felix.fileinstall.version>3.2.8</felix.fileinstall.version>
-        <felix.framework.version>4.2.1</felix.framework.version>
-        <felix.framework.security.version>2.2.0</felix.framework.security.version>
-        <felix.gogo.version>0.10.0</felix.gogo.version>
-        <felix.plugin.version>2.4.0</felix.plugin.version>
-        <felix.utils.version>1.4.2</felix.utils.version>
+        <felix.configadmin.version>1.8.0</felix.configadmin.version>
+        <felix.fileinstall.version>3.4.0</felix.fileinstall.version>
+        <felix.framework.version>4.4.0</felix.framework.version>
+        <felix.framework.security.version>2.4.0</felix.framework.security.version>
+        <felix.gogo.version>0.12.1</felix.gogo.version>
+        <felix.plugin.version>2.5.0</felix.plugin.version>
+        <felix.utils.version>1.6.0</felix.utils.version>
         <felix.webconsole.version>4.2.0</felix.webconsole.version>
         <felix.webconsole.api.version>3.1.2</felix.webconsole.api.version>
         <felix.metatype.version>1.0.10</felix.metatype.version>
@@ -170,6 +174,7 @@
         <felix.scr.version>1.8.2</felix.scr.version>
         <felix.scr.webconsole.plugin.version>1.0.0</felix.scr.webconsole.plugin.version>
         <felix.scr.annotation.version>1.6.0</felix.scr.annotation.version>
+        <felix.resolver.version>1.0.0</felix.resolver.version>
 
         <aries.application.version>1.0.0</aries.application.version>
         <aries.application.api.version>1.0.0</aries.application.api.version>
@@ -177,14 +182,14 @@
         <aries.blueprint.annotation.version>1.0.0</aries.blueprint.annotation.version>
         <aries.blueprint.annotation.api.version>1.0.0</aries.blueprint.annotation.api.version>
         <aries.blueprint.version>1.0.1</aries.blueprint.version>
-        <aries.blueprint.api.version>1.0.0</aries.blueprint.api.version>
-        <aries.blueprint.core.version>1.4.0</aries.blueprint.core.version>
+        <aries.blueprint.api.version>1.0.1</aries.blueprint.api.version>
+        <aries.blueprint.core.version>1.4.1</aries.blueprint.core.version>
         <aries.blueprint.core.compatibility.version>1.0.0</aries.blueprint.core.compatibility.version>
-        <aries.blueprint.cm.version>1.0.3</aries.blueprint.cm.version>
+        <aries.blueprint.cm.version>1.0.4</aries.blueprint.cm.version>
         <aries.blueprint.jexl.evaluator.version>1.0.0</aries.blueprint.jexl.evaluator.version>
         <aries.blueprint.web.version>1.0.1</aries.blueprint.web.version>
-        <aries.jmx.api.version>1.1.0</aries.jmx.api.version>
-        <aries.jmx.core.version>1.1.1</aries.jmx.core.version>
+        <aries.jmx.api.version>1.1.1</aries.jmx.api.version>
+        <aries.jmx.core.version>1.1.2</aries.jmx.core.version>
         <aries.jmx.blueprint.api.version>1.1.0</aries.jmx.blueprint.api.version>
         <aries.jmx.blueprint.core.version>1.1.0</aries.jmx.blueprint.core.version>
         <aries.jmx.whiteboard.version>1.0.0</aries.jmx.whiteboard.version>
@@ -195,24 +200,27 @@
         <aries.jpa.container.context.version>1.0.1</aries.jpa.container.context.version>
         <aries.jndi.version>1.0.0</aries.jndi.version>
         <aries.jndi.api.version>1.0.0</aries.jndi.api.version>
-        <aries.proxy.version>1.0.2</aries.proxy.version>
-        <aries.proxy.api.version>1.0.0</aries.proxy.api.version>
+        <aries.jndi.url.version>1.1.0-SNAPSHOT</aries.jndi.url.version>
+        <aries.proxy.version>1.0.3</aries.proxy.version>
+        <aries.proxy.api.version>1.0.1</aries.proxy.api.version>
+        <aries.subsystem.version>1.0.1-SNAPSHOT</aries.subsystem.version>
         <aries.transaction.version>1.0.1</aries.transaction.version>
         <aries.transaction.manager.version>1.1.0</aries.transaction.manager.version>
         <aries.transaction.blueprint.version>1.0.1</aries.transaction.blueprint.version>
         <aries.transaction.jdbc.version>1.0.0</aries.transaction.jdbc.version>
         <aries.util.version>1.1.0</aries.util.version>
 
-        <gemini.blueprint.version>1.0.0.RELEASE</gemini.blueprint.version>
+        <gemini.blueprint.version>1.0.2.RELEASE</gemini.blueprint.version>
         <hibernate.annotations.common.version>3.3.0.ga</hibernate.annotations.common.version>
         <hibernate.annotations.version>3.4.0.GA</hibernate.annotations.version>
         <hibernate.ejb.version>3.4.0.GA</hibernate.ejb.version>
         <hibernate3.version>3.3.2.GA</hibernate3.version>
-        <hibernate42.version>4.2.7.Final</hibernate42.version>
-        <hibernate43.version>4.3.1.Final</hibernate43.version>
+        <hibernate42.version>4.2.9.Final</hibernate42.version>
+        <hibernate43.version>4.3.5.Final</hibernate43.version>
+        <hibernate.validator.version>5.0.3.Final</hibernate.validator.version>
         <jansi.version>1.11</jansi.version>
         <javassist.version>3.9.0.GA</javassist.version>
-        <jline.version>2.11</jline.version>
+        <jline.version>2.12</jline.version>
         <jledit.version>0.2.1</jledit.version>
         <jsw.version>3.2.3</jsw.version>
         <log4j.version>1.2.17</log4j.version>
@@ -222,32 +230,33 @@
         <osgi.version>5.0.0</osgi.version>
         <osgi.compendium.version>5.0.0</osgi.compendium.version>
         <org.json.version>20131018</org.json.version>
-        <pax.cdi.version>0.6.0</pax.cdi.version>
-        <pax.exam.version>3.4.0</pax.exam.version>
-        <pax.logging.version>1.7.2</pax.logging.version>
+        <pax.cdi.version>0.7.0</pax.cdi.version>
+        <pax.exam.version>4.0.0</pax.exam.version>
+        <pax.logging.version>1.7.3-SNAPSHOT</pax.logging.version>
         <pax.base.version>1.4.0</pax.base.version>
-        <pax.url.version>1.6.0</pax.url.version>
-        <pax.web.version>3.0.6</pax.web.version>
+        <pax.url.version>2.1.0</pax.url.version>
+        <pax.web.version>4.0.0-SNAPSHOT</pax.web.version>
         <pax.swissbox.version>1.7.0</pax.swissbox.version>
         <pax.tinybundle.version>2.0.0</pax.tinybundle.version>
         <portlet-api.version>2.0</portlet-api.version>
-        <servlet.api.version>3.0</servlet.api.version>
-        <slf4j.version>1.7.5</slf4j.version>
+        <slf4j.version>1.7.7</slf4j.version>
         <servicemix.specs.version>2.4.0</servicemix.specs.version>
 
         <spring.osgi.version>1.2.1</spring.osgi.version>
         <spring31.version>3.1.4.RELEASE</spring31.version>
-        <spring32.version>3.2.4.RELEASE</spring32.version>
+        <spring32.version>3.2.9.RELEASE_1</spring32.version>
+        <spring40.version>4.0.5.RELEASE_1</spring40.version>
         <spring.security31.version>3.1.4.RELEASE</spring.security31.version>
 
-        <sshd.version>0.9.0</sshd.version>
+        <sshd.version>0.11.0</sshd.version>
+        <derby-version>10.10.1.1</derby-version>
+        <directory-version>2.0.0-M16</directory-version>
         <struts.bundle.version>1.3.10_1</struts.bundle.version>
-        <xbean.version>3.16</xbean.version>
+        <xbean.version>3.18</xbean.version>
         <xerces.version>2.11.0</xerces.version>
         <javax.mail.version>1.4.5</javax.mail.version>
-        <http.feature.version>[3,4)</http.feature.version>
         <weld.version>2.1.1.Final</weld.version>
-  
+
         <!-- Furter used maven plugin versions; e.g. in the docs -->
         <plugin.depends.version>1.2</plugin.depends.version>
 
@@ -255,6 +264,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <appendedResourcesDirectory>${basedir}/etc/appended-resources</appendedResourcesDirectory>
         <bnd.version.policy>[$(version;==;$(@)),$(version;+;$(@)))</bnd.version.policy>
+        <!-- Disable OBR repository update by default -->
+        <obrRepository>NONE</obrRepository>
     </properties>
 
     <repositories>
@@ -309,7 +320,18 @@
         <repository>
             <id>zodiac-repository</id>
             <name>Zodiac Release Repository</name>
-            <url>http://zodiac.springsource.com/maven/bundles/release</url>
+            <url>http://repository.springsource.com/maven/bundles/release</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-ebr-repository</id>
+            <name>Spring EBR Repository</name>
+            <url>http://repository.springsource.com/maven/bundles/external</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -330,6 +352,20 @@
             </snapshots>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <!-- Apache snapshots -->
+        <pluginRepository>
+            <id>apache-snapshots</id>
+            <name>Apache Snapshots Repository</name>
+            <url>http://repository.apache.org/content/groups/snapshots-group</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencyManagement>
         <dependencies>
@@ -379,12 +415,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.karaf.bundle</groupId>
-                <artifactId>org.apache.karaf.bundle.command</artifactId>
+                <artifactId>org.apache.karaf.bundle.springstate</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.karaf.bundle</groupId>
-                <artifactId>org.apache.karaf.bundle.springstate</artifactId>
+                <artifactId>org.apache.karaf.bundle.blueprintstate</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -393,20 +429,10 @@
                 <artifactId>org.apache.karaf.package.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.package</groupId>
-                <artifactId>org.apache.karaf.package.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.http</groupId>
                 <artifactId>org.apache.karaf.http.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.http</groupId>
-                <artifactId>org.apache.karaf.http.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -415,20 +441,10 @@
                 <artifactId>org.apache.karaf.jdbc.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.jdbc</groupId>
-                <artifactId>org.apache.karaf.jdbc.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.jms</groupId>
                 <artifactId>org.apache.karaf.jms.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.jms</groupId>
-                <artifactId>org.apache.karaf.jms.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -437,20 +453,10 @@
                 <artifactId>org.apache.karaf.jndi.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.jndi</groupId>
-                <artifactId>org.apache.karaf.jndi.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.service</groupId>
                 <artifactId>org.apache.karaf.service.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.service</groupId>
-                <artifactId>org.apache.karaf.service.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -464,20 +470,10 @@
                 <artifactId>org.apache.karaf.log.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.log</groupId>
-                <artifactId>org.apache.karaf.log.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.config</groupId>
                 <artifactId>org.apache.karaf.config.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.config</groupId>
-                <artifactId>org.apache.karaf.config.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -509,20 +505,10 @@
 
             <dependency>
                 <groupId>org.apache.karaf.kar</groupId>
-                <artifactId>org.apache.karaf.kar.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.kar</groupId>
                 <artifactId>org.apache.karaf.kar.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.apache.karaf.obr</groupId>
-                <artifactId>org.apache.karaf.obr.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.karaf.obr</groupId>
                 <artifactId>org.apache.karaf.obr.core</artifactId>
@@ -556,20 +542,10 @@
                 <artifactId>org.apache.karaf.features.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.features</groupId>
-                <artifactId>org.apache.karaf.features.obr</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.diagnostic</groupId>
                 <artifactId>org.apache.karaf.diagnostic.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.diagnostic</groupId>
-                <artifactId>org.apache.karaf.diagnostic.command</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -578,17 +554,7 @@
                 <artifactId>org.apache.karaf.instance.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.instance</groupId>
-                <artifactId>org.apache.karaf.instance.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
-            <dependency>
-                <groupId>org.apache.karaf.system</groupId>
-                <artifactId>org.apache.karaf.system.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.karaf.system</groupId>
                 <artifactId>org.apache.karaf.system.core</artifactId>
@@ -597,39 +563,13 @@
 
             <dependency>
                 <groupId>org.apache.karaf.web</groupId>
-                <artifactId>org.apache.karaf.web.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.web</groupId>
                 <artifactId>org.apache.karaf.web.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.wrapper</groupId>
-                <artifactId>org.apache.karaf.wrapper.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.wrapper</groupId>
                 <artifactId>org.apache.karaf.wrapper.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.karaf.region</groupId>
-                <artifactId>org.apache.karaf.region.core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.region</groupId>
-                <artifactId>org.apache.karaf.region.command</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.region</groupId>
-                <artifactId>org.apache.karaf.region.persist</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -650,12 +590,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.karaf.shell</groupId>
-                <artifactId>org.apache.karaf.shell.help</artifactId>
+                <artifactId>org.apache.karaf.shell.table</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.karaf.shell</groupId>
-                <artifactId>org.apache.karaf.shell.table</artifactId>
+                <artifactId>org.apache.karaf.shell.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -684,15 +624,20 @@
                 <artifactId>org.apache.karaf.jaas.modules</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.karaf.jaas.blueprint</groupId>
+                <artifactId>org.apache.karaf.jaas.blueprint.config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.karaf.jaas.blueprint</groupId>
+                <artifactId>org.apache.karaf.jaas.blueprint.jasypt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.karaf.webconsole</groupId>
                 <artifactId>org.apache.karaf.webconsole.instance</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.karaf.webconsole</groupId>
-                <artifactId>org.apache.karaf.webconsole.branding</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -719,6 +664,23 @@
             <dependency>
                 <groupId>org.apache.karaf.scheduler</groupId>
                 <artifactId>org.apache.karaf.scheduler.core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.karaf.services</groupId>
+                <artifactId>org.apache.karaf.services.eventadmin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.karaf.services</groupId>
+                <artifactId>org.apache.karaf.services.coordinator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.karaf.subsystem</groupId>
+                <artifactId>org.apache.karaf.subsystem.core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -972,6 +934,11 @@
                 <artifactId>org.apache.felix.scr</artifactId>
                 <version>${felix.scr.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.resolver</artifactId>
+                <version>${felix.resolver.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.ow2.asm</groupId>
@@ -1172,23 +1139,29 @@
 
             <dependency>
                 <groupId>org.eclipse.equinox</groupId>
-                <artifactId>region</artifactId>
+                <artifactId>org.eclipse.equinox.region</artifactId>
                 <version>${equinox.region.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.equinox</groupId>
+                <artifactId>org.eclipse.equinox.coordinator</artifactId>
+                <version>${equinox.coordinator.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
-                <groupId>org.eclipse.gemini.blueprint</groupId>
-                <artifactId>gemini-blueprint-io</artifactId>
+                <groupId>org.eclipse.gemini</groupId>
+                <artifactId>org.eclipse.gemini.blueprint.extender</artifactId>
                 <version>${gemini.blueprint.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.gemini.blueprint</groupId>
-                <artifactId>gemini-blueprint-core</artifactId>
+                <groupId>org.eclipse.gemini</groupId>
+                <artifactId>org.eclipse.gemini.blueprint.core</artifactId>
                 <version>${gemini.blueprint.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.gemini.blueprint</groupId>
-                <artifactId>gemini-blueprint-extender</artifactId>
+                <groupId>org.eclipse.gemini</groupId>
+                <artifactId>org.eclipse.gemini.blueprint.io</artifactId>
                 <version>${gemini.blueprint.version}</version>
             </dependency>
 
@@ -1196,6 +1169,11 @@
                 <groupId>org.apache.geronimo.specs</groupId>
                 <artifactId>geronimo-annotation_1.1_spec</artifactId>
                 <version>${geronimo.annotation-spec.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.geronimo.specs</groupId>
+                <artifactId>geronimo-atinject_1.0_spec</artifactId>
+                <version>${geronimo.atinject-spec.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.geronimo.specs</groupId>
@@ -1227,16 +1205,23 @@
                 <groupId>jline</groupId>
                 <artifactId>jline</artifactId>
                 <version>${jline.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.fusesource.jansi</groupId>
-                <artifactId>jansi</artifactId>
-                <version>${jansi.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.fusesource.jansi</groupId>
+                        <artifactId>jansi</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.jledit</groupId>
                 <artifactId>core</artifactId>
                 <version>${jledit.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.fusesource.jansi</groupId>
+                        <artifactId>jansi</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven.artifact</groupId>
@@ -1330,22 +1315,19 @@
                 <groupId>org.ops4j.pax.url</groupId>
                 <artifactId>pax-url-obr</artifactId>
                 <version>${pax.url.version}</version>
+                <classifier>uber</classifier>
             </dependency>
             <dependency>
                 <groupId>org.ops4j.pax.url</groupId>
                 <artifactId>pax-url-war</artifactId>
                 <version>${pax.url.version}</version>
+                <classifier>uber</classifier>
             </dependency>
 
             <dependency>
                 <groupId>org.ops4j.base</groupId>
                 <artifactId>ops4j-base-lang</artifactId>
                 <version>${pax.base.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ops4j.pax.url</groupId>
-                <artifactId>pax-url-maven-commons</artifactId>
-                <version>${pax.url.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ops4j.pax.url</groupId>
@@ -1406,6 +1388,7 @@
                 <groupId>org.ops4j.pax.url</groupId>
                 <artifactId>pax-url-wrap</artifactId>
                 <version>${pax.url.version}</version>
+                <classifier>uber</classifier>
             </dependency>
             <dependency>
                 <groupId>${servlet.spec.groupId}</groupId>
@@ -1485,13 +1468,8 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse</groupId>
-                <artifactId>org.eclipse.osgi</artifactId>
+                <artifactId>osgi</artifactId>
                 <version>${equinox.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>${servlet.api.version}</version>
             </dependency>
 
             <dependency>
@@ -1695,6 +1673,12 @@
                 <groupId>org.apache.aries.jpa</groupId>
                 <artifactId>org.apache.aries.jpa.container.context</artifactId>
                 <version>${aries.jpa.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.aries.subsystem</groupId>
+                <artifactId>org.apache.aries.subsystem</artifactId>
+                <version>${aries.subsystem.version}</version>
             </dependency>
 
             <dependency>
@@ -1905,23 +1889,6 @@
                     </configuration>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.felix</groupId>
-                    <artifactId>maven-bundle-plugin</artifactId>
-                    <version>${felix.plugin.version}</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <instructions>
-                            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                            <Export-Package>${project.artifactId}*;version=${project.version}</Export-Package>
-                            <_versionpolicy>${bnd.version.policy}</_versionpolicy>
-                            <!--
-                            <nsh_interface>org.apache.aries.blueprint.NamespaceHandler</nsh_interface>
-                            <nsh_namespace>osgi.service.blueprint.namespace</nsh_namespace>
-                            -->
-                        </instructions>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-idea-plugin</artifactId>
                     <version>2.2.1</version>
@@ -2095,6 +2062,20 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.karaf.tooling</groupId>
+                    <artifactId>karaf-services-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                    <executions>
+                        <execution>
+                            <id>service-metadata-generate</id>
+                            <phase>process-classes</phase>
+                            <goals>
+                                <goal>service-metadata-generate</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -2102,8 +2083,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                     <maxmem>256M</maxmem>
                     <fork>${compiler.fork}</fork>
                 </configuration>
@@ -2120,11 +2101,11 @@
                         <configuration>
                             <rules>
                                 <requireMavenVersion>
-                                    <version>3.0.2</version>
+                                    <version>[3,4)</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>[1.6,1.8)</version>
-                                </requireJavaVersion>  
+                                    <version>[1.7,1.9)</version>
+                                </requireJavaVersion>
                             </rules>
                         </configuration>
                     </execution>
@@ -2154,12 +2135,17 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>${felix.plugin.version}</version>
                 <inherited>true</inherited>
+                <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <nsh_interface>org.apache.aries.blueprint.NamespaceHandler</nsh_interface>
                         <nsh_namespace>osgi.service.blueprint.namespace</nsh_namespace>
-                        <_removeheaders>Private-Package,Include-Resource</_removeheaders>
+                        <_removeheaders>Private-Package,Include-Resource,Embed-Dependency,Created-By,Bnd-LastModified,Built-By,Tool</_removeheaders>
+                        <Bundle-DocURL>http://karaf.apache.org/</Bundle-DocURL>
+                        <Provide-Capability>${capabilities}</Provide-Capability>
+                        <Require-Capability>${requirements}</Require-Capability>
                     </instructions>
                 </configuration>
                 <executions>
@@ -2225,6 +2211,9 @@
         </profile>
         <profile>
             <id>rat</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -2255,6 +2244,8 @@
                                 <exclude>**/.*</exclude>
                                 <exclude>**/eclipse-classes/**/*</exclude>
                                 <exclude>**/dependency-reduced-pom.xml</exclude>
+                                <exclude>**/.settings/**</exclude>
+                                <exclude>**/bin/**</exclude>
                                 <!-- resources file -->
                                 <exclude>**/bundle.info</exclude>
                                 <exclude>**/goal.txt</exclude>
@@ -2264,9 +2255,13 @@
                                 <exclude>**/foo</exclude>
                                 <exclude>**/org.ops4j.pax.exam.TestContainerFactory</exclude>
                                 <!--manual resources -->
-                                <exclude>manual/**/*.css</exclude>
-                                <exclude>manual/**/*.ssp</exclude>
-                                <exclude>manual/**/*.conf</exclude>
+                                <exclude>**/*.css</exclude>
+                                <exclude>**/*.ssp</exclude>
+                                <exclude>**/*.conf</exclude>
+                                <!-- test manifests -->
+                                <exclude>**/*.mf</exclude>
+                                <!-- test json files -->
+                                <exclude>**/*.json</exclude>
                             </excludes>
                         </configuration>
                     </plugin>
@@ -2398,4 +2393,3 @@
         </profile>
     </profiles>
 </project>
-

@@ -17,13 +17,14 @@
  */
 package org.apache.karaf.tooling.features;
 
+import aQute.bnd.header.OSGiHeader;
 import org.apache.felix.utils.manifest.Clause;
 import org.apache.karaf.features.BundleInfo;
 import org.apache.karaf.features.Dependency;
 import org.apache.karaf.features.Feature;
 import org.apache.karaf.features.Repository;
-import org.apache.karaf.features.internal.FeatureValidationUtil;
-import org.apache.karaf.features.internal.RepositoryImpl;
+import org.apache.karaf.features.internal.service.FeatureValidationUtil;
+import org.apache.karaf.features.internal.service.RepositoryImpl;
 import org.apache.karaf.tooling.url.CustomBundleURLStreamHandlerFactory;
 import org.apache.karaf.tooling.utils.MojoSupport;
 import org.apache.maven.artifact.Artifact;
@@ -46,6 +47,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
@@ -344,12 +346,7 @@ public class ValidateDescriptorMojo extends MojoSupport {
         }
 
         String packages = (String) properties.get(jreVersion);
-        for (String pkg : packages.split(";")) {
-            systemExports.add(pkg.trim());
-        }
-        for (String pkg : packages.split(",")) {
-            systemExports.add(pkg.trim());
-        }
+        systemExports.addAll(OSGiHeader.parseHeader(packages).keySet());
     }
 
     /*
@@ -501,10 +498,6 @@ public class ValidateDescriptorMojo extends MojoSupport {
         } else {
             try {
                 return ManifestUtils.isBundle(getManifest(bundle, artifact));
-            } catch (ZipException e) {
-                getLog().debug("Unable to determine if " + artifact + " is a bundle; defaulting to false", e);
-            } catch (IOException e) {
-                getLog().debug("Unable to determine if " + artifact + " is a bundle; defaulting to false", e);
             } catch (Exception e) {
                 getLog().debug("Unable to determine if " + artifact + " is a bundle; defaulting to false", e);
             }
@@ -516,31 +509,22 @@ public class ValidateDescriptorMojo extends MojoSupport {
      * Extract the META-INF/MANIFEST.MF file from an artifact
      */
     private Manifest getManifest(String bundle, Object artifact) throws ArtifactResolutionException, ArtifactNotFoundException,
-            ZipException, IOException {
+            IOException {
         if (!(artifact instanceof Artifact)) {
             //not resolved as mvn artifact, so it's non-mvn protocol, just use the CustomBundleURLStreamHandlerFactory
             // to open stream
-            InputStream is = null;
-            try {
-                is = new BufferedInputStream(new URL(bundle).openStream());
-            } catch (Exception e) {
-                getLog().warn("Error while opening artifact", e);
-            }
-
-            try {
-                is.mark(256 * 1024);
-                JarInputStream jar = new JarInputStream(is);
+            try (
+                InputStream is = new BufferedInputStream(new URL(bundle).openStream());
+                JarInputStream jar = new JarInputStream(is)
+            ) {
                 Manifest m = jar.getManifest();
                 if (m == null) {
                     throw new IOException("Manifest not present in the first entry of the zip");
                 }
-                silentClose(jar);
                 return m;
-            } finally {
-            	silentClose(is);
             }
         } else {
-        	ZipFile file = null;
+        	ZipFile file;
             Artifact mvnArtifact = (Artifact) artifact;
             File localFile = new File(localRepo.pathOf(mvnArtifact));
             if (localFile.exists()) {
@@ -551,12 +535,20 @@ public class ValidateDescriptorMojo extends MojoSupport {
                 resolver.resolve(mvnArtifact, remoteRepos, localRepo);
                 file = new ZipFile(mvnArtifact.getFile());
             }
+            ZipEntry entry = file.getEntry("META-INF/MANIFEST.MF");
+            if (entry == null) {
+                throw new IOException("Manifest not present in the first entry of the zip");
+            }
             // let's replace syserr for now to hide warnings being issues by the Manifest reading process
             PrintStream original = System.err;
             try {
                 System.setErr(new PrintStream(new ByteArrayOutputStream()));
-                Manifest manifest = new Manifest(file.getInputStream(file.getEntry("META-INF/MANIFEST.MF")));
-                return manifest;
+                try (
+                    InputStream is = file.getInputStream(entry)
+                ) {
+                    Manifest manifest = new Manifest(is);
+                    return manifest;
+                }
             } finally {
                 System.setErr(original);
             }

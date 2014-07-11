@@ -1,22 +1,19 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.karaf.features.internal.model;
 
 import java.util.ArrayList;
@@ -29,18 +26,20 @@ import java.util.regex.Pattern;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+
+import org.apache.felix.utils.version.VersionCleaner;
 
 
 /**
- * 
  * Definition of the Feature.
- *             
- * 
+ * <p/>
+ * <p/>
  * <p>Java class for feature complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="feature">
  *   &lt;complexContent>
@@ -51,6 +50,9 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="configfile" type="{http://karaf.apache.org/xmlns/features/v1.0.0}configFile" maxOccurs="unbounded" minOccurs="0"/>
  *         &lt;element name="feature" type="{http://karaf.apache.org/xmlns/features/v1.0.0}dependency" maxOccurs="unbounded" minOccurs="0"/>
  *         &lt;element name="bundle" type="{http://karaf.apache.org/xmlns/features/v1.0.0}bundle" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="conditional" type="{http://karaf.apache.org/xmlns/features/v1.0.0}conditional" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="capability" type="{http://karaf.apache.org/xmlns/features/v1.0.0}capability" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="requirement" type="{http://karaf.apache.org/xmlns/features/v1.0.0}requirement" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="name" use="required" type="{http://karaf.apache.org/xmlns/features/v1.0.0}featureName" />
  *       &lt;attribute name="version" type="{http://www.w3.org/2001/XMLSchema}string" default="0.0.0" />
@@ -60,27 +62,29 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "feature", propOrder = {
-    "details",
-    "config",
-    "configfile",
-    "feature",
-    "bundle",
-    "conditional"
-})
+        "details",
+        "config",
+        "configfile",
+        "feature",
+        "bundle",
+        "conditional",
+        "capability",
+        "requirement",
+        "scoping"
+        })
 public class Feature extends Content implements org.apache.karaf.features.Feature {
-    public static String SPLIT_FOR_NAME_AND_VERSION = "_split_for_name_and_version_";
-    public static String DEFAULT_VERSION = "0.0.0";
+
+    public static final String VERSION_SEPARATOR = "/";
+    public static final String DEFAULT_VERSION = "0.0.0";
 
 
     protected String details;
     @XmlAttribute(required = true)
     protected String name;
-    @XmlAttribute
+    @XmlTransient
     protected String version;
     @XmlAttribute
     protected String description;
@@ -91,8 +95,11 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
     @XmlAttribute(name = "start-level")
     protected Integer startLevel;
     @XmlAttribute
-    protected String region;
+    protected Boolean hidden;
     protected List<Conditional> conditional;
+    protected List<Capability> capability;
+    protected List<Requirement> requirement;
+    protected Scoping scoping;
 
     public Feature() {
     }
@@ -103,35 +110,33 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     public Feature(String name, String version) {
         this.name = name;
-        this.version = version;
+        this.version = VersionCleaner.clean(version);
     }
 
 
     public static org.apache.karaf.features.Feature valueOf(String str) {
-    	if (str.indexOf(SPLIT_FOR_NAME_AND_VERSION) >= 0) {
-    		String strName = str.substring(0, str.indexOf(SPLIT_FOR_NAME_AND_VERSION));
-        	String strVersion = str.substring(str.indexOf(SPLIT_FOR_NAME_AND_VERSION)
-        			+ SPLIT_FOR_NAME_AND_VERSION.length(), str.length());
-        	return new Feature(strName, strVersion);
-    	} else {
-    		return new Feature(str);
-    	}
+        if (str.contains(VERSION_SEPARATOR)) {
+            String strName = str.substring(0, str.indexOf(VERSION_SEPARATOR));
+            String strVersion = str.substring(str.indexOf(VERSION_SEPARATOR)
+                    + VERSION_SEPARATOR.length(), str.length());
+            return new Feature(strName, strVersion);
+        } else {
+            return new Feature(str);
+        }
 
 
     }
 
 
     public String getId() {
-        return getName() + "-" + getVersion();
+        return getName() + VERSION_SEPARATOR + getVersion();
     }
 
     /**
      * Gets the value of the name property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getName() {
         return name;
@@ -139,11 +144,9 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Sets the value of the name property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setName(String value) {
         this.name = value;
@@ -151,15 +154,13 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Gets the value of the version property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getVersion() {
         if (version == null) {
-            return "0.0.0";
+            return DEFAULT_VERSION;
         } else {
             return version;
         }
@@ -167,14 +168,13 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Sets the value of the version property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
+    @XmlAttribute
     public void setVersion(String value) {
-        this.version = value;
+        this.version = VersionCleaner.clean(value);
     }
 
     /**
@@ -187,11 +187,9 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Gets the value of the description property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getDescription() {
         return description;
@@ -199,11 +197,9 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Sets the value of the description property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setDescription(String value) {
         this.description = value;
@@ -219,11 +215,9 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Gets the value of the resolver property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getResolver() {
         return resolver;
@@ -239,47 +233,46 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
 
     /**
      * Sets the value of the resolver property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setResolver(String value) {
         this.resolver = value;
     }
-    
+
     /**
      * Gets the value of the startLevel property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Integer }
-     *     
+     *
+     * @return possible object is
+     * {@link Integer }
      */
     public int getStartLevel() {
-        return startLevel == null? 0: startLevel;
+        return startLevel == null ? 0 : startLevel;
     }
 
     /**
      * Sets the value of the startLevel property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Integer }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Integer }
      */
     public void setStartLevel(Integer value) {
         this.startLevel = value;
     }
 
-
-    public String getRegion() {
-        return region;
+    /**
+     * Gets the value of the hidden property.
+     */
+    public boolean isHidden() {
+        return hidden == null ? false : hidden;
     }
 
-    public void setRegion(String region) {
-        this.region = region;
+    /**
+     * Sets the value of the hidden property.
+     */
+    public void setHidden(Boolean value) {
+        this.hidden = value;
     }
 
     /**
@@ -300,30 +293,56 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
      * <p/>
      * <p/>
      * Objects of the following type(s) are allowed in the list
-     * {@link Dependency }
+     * {@link Conditional }
      */
     public List<Conditional> getConditional() {
         if (conditional == null) {
-            conditional = new ArrayList<Conditional>();
+            conditional = new ArrayList<>();
         }
         return this.conditional;
     }
 
+    public List<Capability> getCapabilities() {
+        if (capability == null) {
+            capability = new ArrayList<>();
+        }
+        return this.capability;
+    }
+
+    public List<Requirement> getRequirements() {
+        if (requirement == null) {
+            requirement = new ArrayList<>();
+        }
+        return this.requirement;
+    }
+
+    public Scoping getScoping() {
+        return scoping;
+    }
+
+    public void setScoping(Scoping scoping) {
+        this.scoping = scoping;
+    }
+
     public String toString() {
-    	String ret = getName() + SPLIT_FOR_NAME_AND_VERSION + getVersion();
-    	return ret;
+        return getId();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Feature feature = (Feature) o;
-
-        if (name != null ? !name.equals(feature.name) : feature.name != null) return false;
-        if (version != null ? !version.equals(feature.version) : feature.version != null) return false;
-
+        if (name != null ? !name.equals(feature.name) : feature.name != null) {
+            return false;
+        }
+        if (version != null ? !version.equals(feature.version) : feature.version != null) {
+            return false;
+        }
         return true;
     }
 
@@ -335,7 +354,7 @@ public class Feature extends Content implements org.apache.karaf.features.Featur
     }
 
     @SuppressWarnings("rawtypes")
-	protected void interpolation(Properties properties) {
+    protected void interpolation(Properties properties) {
         for (Enumeration e = properties.propertyNames(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
             String val = properties.getProperty(key);

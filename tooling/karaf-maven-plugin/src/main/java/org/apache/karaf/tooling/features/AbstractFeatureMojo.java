@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.felix.utils.version.VersionRange;
+import org.apache.felix.utils.version.VersionTable;
 import org.apache.karaf.tooling.features.model.ArtifactRef;
 import org.apache.karaf.tooling.features.model.Feature;
 import org.apache.karaf.tooling.features.model.Repository;
@@ -33,6 +35,8 @@ import org.apache.karaf.tooling.utils.MojoSupport;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import org.osgi.framework.Version;
 
 /**
  * Common functionality for mojos that need to reolve features
@@ -185,6 +189,22 @@ public abstract class AbstractFeatureMojo extends MojoSupport {
         if (version != null) {
             // looking for a specific feature with name and version
             f = featuresMap.get(feature + "/" + version);
+            if (f == null) {
+                //it's probably is a version range so try to use VersionRange Utils
+                VersionRange versionRange = new VersionRange(version);
+                for (String key : featuresMap.keySet()) {
+                    String[] nameVersion = key.split("/");
+                    if (feature.equals(nameVersion[0])) {
+                        String verStr = featuresMap.get(key).getVersion();
+                        Version ver = VersionTable.getVersion(verStr);
+                        if (versionRange.contains(ver)) {
+                            if (f == null || VersionTable.getVersion(f.getVersion()).compareTo(VersionTable.getVersion(featuresMap.get(key).getVersion())) < 0) {    
+                                f = featuresMap.get(key);
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             // looking for the first feature name (whatever the version is)
             for (String key : featuresMap.keySet()) {
@@ -219,8 +239,12 @@ public abstract class AbstractFeatureMojo extends MojoSupport {
     
             getLog().info("Base repo: " + localRepo.getUrl());
             for (Feature feature : featuresSet) {
-                resolveArtifacts(feature.getBundles());
-                resolveArtifacts(feature.getConfigFiles());
+                try {
+                    resolveArtifacts(feature.getBundles());
+                    resolveArtifacts(feature.getConfigFiles());
+                } catch (RuntimeException e) {
+                    throw new RuntimeException("Error resolving feature " + feature.getName() + "/" + feature.getVersion(), e);
+                }
             }            
         } catch (Exception e) {
             throw new MojoExecutionException("Error populating repository", e);
@@ -233,7 +257,11 @@ public abstract class AbstractFeatureMojo extends MojoSupport {
             Artifact artifact = resourceToArtifact(artifactRef.getUrl(), skipNonMavenProtocols);
             if (artifact != null) {
                 artifactRef.setArtifact(artifact);
-                resolveArtifact(artifact, remoteRepos);
+                try {
+                    resolveArtifact(artifact, remoteRepos);
+                } catch (RuntimeException e) {
+                    throw new RuntimeException("Error resolving artifact " + artifactRef.getUrl(), e);
+                }
             }
             checkDoGarbageCollect();
         }

@@ -16,31 +16,27 @@
  */
 package org.apache.karaf.bundle.state.spring.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.apache.karaf.bundle.core.BundleStateService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.springframework.osgi.context.event.OsgiBundleApplicationContextListener;
 
 public class Activator implements BundleActivator {
 
-    public void start(BundleContext bundleContext) {
-	    registerSpringBundleStateService(bundleContext);
-    }
+    private ServiceRegistration registration;
 
-	private void registerSpringBundleStateService(BundleContext bundleContext) {
-		SpringStateService springStateService = new SpringStateService(bundleContext);
-	    Dictionary<String, ?> properties = new Hashtable<String, String>();
-	    String[] classes2 = new String[] {
+    public void start(BundleContext bundleContext) {
+		SpringStateService services = new SpringStateService();
+	    String[] classes = new String[] {
 				OsgiBundleApplicationContextListener.class.getName(),
 				BundleStateService.class.getName()
 			};
-	    bundleContext.registerService(classes2, springStateService, properties);
+        registration = bundleContext.registerService(classes, services, null);
 	}
 
     public void stop(BundleContext context) {
+        registration.unregister();
     }
 
 }

@@ -21,17 +21,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.karaf.features.Conditional;
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.commands.Option;
 import org.apache.karaf.features.BundleInfo;
+import org.apache.karaf.features.Conditional;
 import org.apache.karaf.features.ConfigFileInfo;
 import org.apache.karaf.features.Dependency;
 import org.apache.karaf.features.Feature;
 import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.features.command.completers.AllFeatureCompleter;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Completion;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
 
 @Command(scope = "feature", name = "info", description = "Shows information about selected feature.")
+@Service
 public class InfoFeatureCommand extends FeaturesCommandSupport {
 
     private static final String INDENT = "  ";
@@ -39,6 +43,7 @@ public class InfoFeatureCommand extends FeaturesCommandSupport {
     private static final String CONDITIONAL_CONTENT = "Conditional(%s)";
 
 	@Argument(index = 0, name = "name", description = "The name of the feature", required = true, multiValued = false)
+    @Completion(AllFeatureCompleter.class)
     private String name;
 
     @Argument(index = 1, name = "version", description = "The version of the feature", required = false, multiValued = false)
@@ -214,7 +219,7 @@ public class InfoFeatureCommand extends FeaturesCommandSupport {
 
                 if (conditional) {
                     for (Conditional cond : resolved.getConditional()) {
-                        List<? extends Dependency> condition = cond.getCondition();
+                        List<String> condition = cond.getCondition();
                         List<BundleInfo> conditionalBundles = cond.getBundles();
                         for (BundleInfo bundleInfo : conditionalBundles) {
                             bundleLocation.add(bundleInfo.getLocation() + "(condition:"+condition+")");
@@ -273,13 +278,11 @@ public class InfoFeatureCommand extends FeaturesCommandSupport {
 
     private String getConditionDescription(Conditional cond) {
         StringBuffer sb = new StringBuffer();
-        Iterator<? extends Dependency> di = cond.getCondition().iterator();
-        while (di.hasNext()) {
-            Dependency dep = di.next();
-            sb.append(dep.getName()).append("/").append(dep.getVersion());
-            if (di.hasNext()) {
+        for (String dep : cond.getCondition()) {
+            if (sb.length() > 0) {
                 sb.append(" ");
             }
+            sb.append(dep);
         }
         return sb.toString();
     }

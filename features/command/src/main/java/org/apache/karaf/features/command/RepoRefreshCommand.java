@@ -17,57 +17,49 @@
 package org.apache.karaf.features.command;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.features.Repository;
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.console.AbstractAction;
+import org.apache.karaf.features.command.completers.InstalledRepoUriCompleter;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Completion;
 
 @Command(scope = "feature", name = "repo-refresh", description = "Refresh a features repository")
-public class RepoRefreshCommand extends AbstractAction {
+public class RepoRefreshCommand extends FeaturesCommandSupport {
     @Argument(index = 0, name = "Feature name or uri", description = "Shortcut name of the feature repository or the full URI", required = false, multiValued = false)
+    @Completion(InstalledRepoUriCompleter.class)
     private String nameOrUrl;
     
     @Argument(index = 1, name = "Feature version", description = "The version of the feature if using the feature name. Should be empty if using the uri", required = false, multiValued = false)
     private String version;
 
-    private FeatureFinder featureFinder;
-    private FeaturesService featuresService;
-    
-    public void setFeatureFinder(FeatureFinder featureFinder) {
-        this.featureFinder = featureFinder;
-    }
-
-    public void setFeaturesService(FeaturesService featuresService) {
-        this.featuresService = featuresService;
-    }
-
-    protected Object doExecute() throws Exception {
+    @Override
+    protected void doExecute(FeaturesService featuresService) throws Exception {
+        List<URI> uris = new ArrayList<URI>();
     	if (nameOrUrl != null) {
     		String effectiveVersion = (version == null) ? "LATEST" : version;
-        	URI uri = featureFinder.getUriFor(nameOrUrl, effectiveVersion);
+        	URI uri = featuresService.getRepositoryUriFor(nameOrUrl, effectiveVersion);
         	if (uri == null) {
         		uri = new URI(nameOrUrl);
         	}
-        	System.out.println("Refreshing feature url " + uri);
-        	featuresService.refreshRepository(uri);
+            uris.add(uri);
     	} else {
-    		refreshAll();
+            Repository[] repos = featuresService.listRepositories();
+            for (Repository repo : repos) {
+                uris.add(repo.getURI());
+            }
     	}
-        return null;
+        for (URI uri : uris) {
+            try {
+                System.out.println("Refreshing feature url " + uri);
+                featuresService.refreshRepository(uri);
+            } catch (Exception e) {
+                System.err.println("Error refreshing " + uri.toString() + ": " + e.getMessage());
+            }
+        }
     }
-
-	private void refreshAll() {
-		Repository[] repos = featuresService.listRepositories();
-		for (Repository repo : repos) {
-			try {
-				System.out.println("Refreshing feature url " + repo.getURI());
-				featuresService.refreshRepository(repo.getURI());
-			} catch (Exception e) {
-				System.err.println("Error refreshing " + repo.getURI().toString() + ": " +e.getMessage());
-			}
-		}
-	}
 
 }

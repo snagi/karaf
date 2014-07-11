@@ -16,26 +16,23 @@
  */
 package org.apache.karaf.scr.command.action;
 
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.List;
+
 import org.apache.felix.scr.Component;
 import org.apache.felix.scr.ScrService;
-import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.scr.command.ScrCommandConstants;
-import org.apache.karaf.shell.commands.Option;
-import org.apache.karaf.shell.console.AbstractAction;
-import org.apache.karaf.shell.console.CommandSessionHolder;
-import org.apache.karaf.shell.console.SubShellAction;
-import org.apache.karaf.shell.console.completer.ArgumentCompleter;
-import org.fusesource.jansi.Ansi;
+import org.apache.karaf.shell.api.action.Action;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.console.CommandLine;
+import org.apache.karaf.shell.api.console.Session;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-
-public abstract class ScrActionSupport extends SubShellAction {
+public abstract class ScrActionSupport implements Action {
 
     @Option(name = ScrActionSupport.SHOW_ALL_OPTION, aliases = {ScrActionSupport.SHOW_ALL_ALIAS}, description = "Show all Components including the System Components (hidden by default)", required = false, multiValued = false)
     boolean showHidden = false;
@@ -45,14 +42,17 @@ public abstract class ScrActionSupport extends SubShellAction {
     
     protected final Logger logger = LoggerFactory.getLogger(getClass().getName());
 
+    @Reference
     private ScrService scrService;
 
+    @Reference
+    BundleContext bundleContext;
+
     public ScrActionSupport() {
-        setSubShell("scr");
     }
 
     @Override
-    public Object doExecute() throws Exception {
+    public Object execute() throws Exception {
         if (scrService == null) {
             String msg = "ScrService is unavailable";
             System.out.println(msg);
@@ -70,47 +70,24 @@ public abstract class ScrActionSupport extends SubShellAction {
         return answer;
     }
 
-    public static boolean showHiddenComponent(Component component) {
-        boolean answer = false;
+    public static boolean showHiddenComponent(CommandLine commandLine, Component component) {
         // first look to see if the show all option is there
         // if it is we set showAllFlag to true so the next section will be skipped
-        CommandSession commandSession = CommandSessionHolder.getSession();
-        ArgumentCompleter.ArgumentList list = (ArgumentCompleter.ArgumentList) commandSession.get(ArgumentCompleter.ARGUMENTS_LIST);
-        if (list != null && list.getArguments() != null && list.getArguments().length > 0) {
-            List<String> arguments = Arrays.asList(list.getArguments());
-            if (arguments.contains(ScrActionSupport.SHOW_ALL_OPTION) || arguments.contains(ScrActionSupport.SHOW_ALL_ALIAS)) {
-                answer = true;
-            }
-        }
-
-        return answer;
+        List<String> arguments = Arrays.asList(commandLine.getArguments());
+        return arguments.contains(ScrActionSupport.SHOW_ALL_OPTION) || arguments.contains(ScrActionSupport.SHOW_ALL_ALIAS);
     }
 
     @SuppressWarnings("rawtypes")
     public static boolean isHiddenComponent(Component component) {
         boolean answer = false;
-        Hashtable properties = (Hashtable) component.getProperties();
-        if (properties != null && properties.containsKey(ScrCommandConstants.HIDDEN_COMPONENT_KEY)) {
+        Dictionary properties = component.getProperties();
+        if (properties != null) {
             String value = (String) properties.get(ScrCommandConstants.HIDDEN_COMPONENT_KEY);
             // if the value is false, show the hidden
             // then someone wants us to display the name of a hidden component
-            if (value != null && value.equals("true")) {
-                answer = true;
-            }
+            answer = Boolean.parseBoolean(value);
         }
         return answer;
-    }
-
-    public String getBoldString(String value) {
-        return Ansi.ansi().a(Ansi.Attribute.INTENSITY_BOLD).a(value).a(Ansi.Attribute.INTENSITY_BOLD_OFF).toString();
-    }
-
-    public String buildRightPadBracketDisplay(String s, int max) {
-        return String.format("%1$-" + max + "s", s);
-    }
-
-    public String buildLeftPadBracketDisplay(String s, int max) {
-        return String.format("%1$-" + max + "s", s);
     }
 
     /**
@@ -120,7 +97,7 @@ public abstract class ScrActionSupport extends SubShellAction {
      * @return the bundleContext
      */
     public BundleContext getBundleContext() {
-        return FrameworkUtil.getBundle(ListAction.class).getBundleContext();
+        return bundleContext;
     }
 
     /**

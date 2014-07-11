@@ -20,10 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.karaf.features.BundleInfo;
+import org.apache.karaf.features.Capability;
 import org.apache.karaf.features.Conditional;
 import org.apache.karaf.features.ConfigFileInfo;
 import org.apache.karaf.features.Dependency;
 import org.apache.karaf.features.Feature;
+import org.apache.karaf.features.Requirement;
+import org.apache.karaf.features.Scoping;
 
 public class ExtendedFeature implements Feature {
 
@@ -66,6 +69,16 @@ public class ExtendedFeature implements Feature {
     @Override
     public List<? extends Conditional> getConditional() {
         return this.feature.getConditional();
+    }
+
+    @Override
+    public List<? extends Capability> getCapabilities() {
+        return feature.getCapabilities();
+    }
+
+    @Override
+    public List<? extends Requirement> getRequirements() {
+        return feature.getRequirements();
     }
 
     @Override
@@ -112,6 +125,11 @@ public class ExtendedFeature implements Feature {
         return feature.getInstall();
     }
 
+    @Override
+    public boolean isHidden() {
+        return feature.isHidden();
+    }
+
     public State getState() {
         return this.state;
     }
@@ -127,8 +145,7 @@ public class ExtendedFeature implements Feature {
     }
 
     @Override
-    public String getRegion() {
-        return feature.getRegion();
+    public Scoping getScoping() {
+        return feature.getScoping();
     }
-
 }

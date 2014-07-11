@@ -15,6 +15,7 @@ package org.apache.karaf.itests;
 
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureSecurity;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -51,11 +53,11 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.security.auth.Subject;
 
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
 import org.apache.karaf.features.BootFinished;
 import org.apache.karaf.features.Feature;
 import org.apache.karaf.features.FeaturesService;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.api.console.SessionFactory;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.ops4j.pax.exam.Configuration;
@@ -96,6 +98,9 @@ public class KarafTestSupport {
     @Inject
     protected FeaturesService featureService;
 
+    @Inject
+    protected SessionFactory sessionFactory;
+
     /**
      * To make sure the tests run only when the boot features are fully installed
      */
@@ -126,10 +131,11 @@ public class KarafTestSupport {
             configureSecurity().enableKarafMBeanServerBuilder(),
             keepRuntimeFolder(),
             replaceConfigurationFile("etc/org.ops4j.pax.logging.cfg", getConfigFile("/etc/org.ops4j.pax.logging.cfg")),
-            editConfigurationFilePut("etc/org.apache.karaf.features.cfg", "featuresBoot", "config,standard,region,package,kar,management"),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", HTTP_PORT),
             editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", RMI_REG_PORT),
-            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", RMI_SERVER_PORT)
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", RMI_SERVER_PORT),
+            editConfigurationFilePut("etc/system.properties", "spring32.version", System.getProperty("spring32.version")),
+            editConfigurationFilePut("etc/system.properties", "spring40.version", System.getProperty("spring40.version"))
         };
     }
 
@@ -161,8 +167,8 @@ public class KarafTestSupport {
         String response;
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         final PrintStream printStream = new PrintStream(byteArrayOutputStream);
-        final CommandProcessor commandProcessor = getOsgiService(CommandProcessor.class);
-        final CommandSession commandSession = commandProcessor.createSession(System.in, printStream, System.err);
+        final SessionFactory sessionFactory = getOsgiService(SessionFactory.class);
+        final Session session = sessionFactory.create(System.in, printStream, System.err);
 
         final Callable<String> commandCallable = new Callable<String>() {
             @Override
@@ -171,7 +177,7 @@ public class KarafTestSupport {
                     if (!silent) {
                         System.err.println(command);
                     }
-                    commandSession.execute(command);
+                    session.execute(command);
                 } catch (Exception e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
@@ -280,21 +286,24 @@ public class KarafTestSupport {
             command = command.substring(0, spaceIdx);
         }
         int colonIndx = command.indexOf(':');
-
+        String scope = (colonIndx > 0) ? command.substring(0, colonIndx) : "*";
+        String name  = (colonIndx > 0) ? command.substring(colonIndx + 1) : command;
         try {
-            if (colonIndx > 0) {
-                String scope = command.substring(0, colonIndx);
-                String function = command.substring(colonIndx + 1);
-                waitForService("(&(osgi.command.scope=" + scope + ")(osgi.command.function=" + function + "))", SERVICE_TIMEOUT);
-            } else {
-                waitForService("(osgi.command.function=" + command + ")", SERVICE_TIMEOUT);
+            long start = System.currentTimeMillis();
+            long cur   = start;
+            while (cur - start < SERVICE_TIMEOUT) {
+                if (sessionFactory.getRegistry().getCommand(scope, name) != null) {
+                    return;
+                }
+                Thread.sleep(100);
+                cur = System.currentTimeMillis();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void waitForService(String filter, long timeout) throws InvalidSyntaxException, InterruptedException {
+    protected void waitForService(String filter, long timeout) throws InvalidSyntaxException, InterruptedException {
         ServiceTracker<Object, Object> st = new ServiceTracker<Object, Object>(bundleContext, bundleContext.createFilter(filter), null);
         try {
             st.open();
@@ -342,17 +351,31 @@ public class KarafTestSupport {
         return connector;
     }
 
-    public void assertFeatureInstalled(String featureName) {
+    public void assertFeatureInstalled(String featureName) throws Exception {
+        String name;
+        String version;
+        if (featureName.contains("/")) {
+            name = featureName.substring(0, featureName.indexOf("/"));
+            version = featureName.substring(featureName.indexOf("/") + 1);
+        } else {
+            name = featureName;
+            version = null;
+        }
+        assertFeatureInstalled(name, version);
+    }
+
+    public void assertFeatureInstalled(String featureName, String featureVersion) throws Exception {
+        Feature featureToAssert = featureService.getFeature(featureName, featureVersion);
         Feature[] features = featureService.listInstalledFeatures();
         for (Feature feature : features) {
-            if (featureName.equals(feature.getName())) {
+            if (featureToAssert.equals(feature)) {
                 return;
             }
         }
-        Assert.fail("Feature " + featureName + " should be installed but is not");
+        Assert.fail("Feature " + featureName + (featureVersion != null ? "/" + featureVersion : "") + " should be installed but is not");
     }
 
-    public void assertFeaturesInstalled(String ... expectedFeatures) {
+    public void assertFeaturesInstalled(String ... expectedFeatures) throws Exception {
         Set<String> expectedFeaturesSet = new HashSet<String>(Arrays.asList(expectedFeatures));
         Feature[] features = featureService.listInstalledFeatures();
         Set<String> installedFeatures = new HashSet<String>();
@@ -389,19 +412,33 @@ public class KarafTestSupport {
 	}
 
     protected void installAndAssertFeature(String feature) throws Exception {
-        featureService.installFeature(feature);
+        featureService.installFeature(feature, EnumSet.of(FeaturesService.Option.NoAutoRefreshBundles));
         assertFeatureInstalled(feature);
     }
 
-    protected void installAssertAndUninstallFeature(String... feature) throws Exception {
-    	Set<Feature> featuresBefore = new HashSet<Feature>(Arrays.asList(featureService.listInstalledFeatures()));
+    protected void installAssertAndUninstallFeature(String feature, String version) throws Exception {
+        installAssertAndUninstallFeatures(feature + "/" + version);
+    }
+
+    protected void installAssertAndUninstallFeatures(String... feature) throws Exception {
+        boolean success = false;
     	try {
 			for (String curFeature : feature) {
-				featureService.installFeature(curFeature);
+				featureService.installFeature(curFeature, EnumSet.of(FeaturesService.Option.NoAutoRefreshBundles));
 			    assertFeatureInstalled(curFeature);
 			}
+            success = true;
 		} finally {
-			uninstallNewFeatures(featuresBefore);
+            for (String curFeature : feature) {
+                System.out.println("Uninstalling " + curFeature);
+                try {
+                    featureService.uninstallFeature(curFeature, EnumSet.of(FeaturesService.Option.NoAutoRefreshBundles));
+                } catch (Exception e) {
+                    if (success) {
+                        throw e;
+                    }
+                }
+            }
 		}
     }
 
@@ -419,7 +456,8 @@ public class KarafTestSupport {
 			if (!featuresBefore.contains(curFeature)) {
 				try {
 					System.out.println("Uninstalling " + curFeature.getName());
-					featureService.uninstallFeature(curFeature.getName(), curFeature.getVersion());
+					featureService.uninstallFeature(curFeature.getName(), curFeature.getVersion(),
+                                                    EnumSet.of(FeaturesService.Option.NoAutoRefreshBundles));
 				} catch (Exception e) {
 					LOG.error(e.getMessage(), e);
 				}

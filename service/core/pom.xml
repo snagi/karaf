@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.service</groupId>
         <artifactId>service</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -43,6 +43,17 @@
             <artifactId>org.osgi.core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.karaf</groupId>
+            <artifactId>org.apache.karaf.util</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.karaf.shell</groupId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -68,11 +79,18 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.karaf.service.core
+                            org.apache.karaf.service.core;-noimport:=true
                         </Export-Package>
                         <Private-Package>
-                            org.apache.karaf.service.core.internal
+                            org.apache.karaf.service.command,
+                            org.apache.karaf.service.core.internal,
+                            org.apache.karaf.service.core.internal.osgi,
+                            org.apache.karaf.util.tracker
                         </Private-Package>
+                        <Bundle-Activator>
+                            org.apache.karaf.service.core.internal.osgi.Activator
+                        </Bundle-Activator>
+                        <Karaf-Commands>org.apache.karaf.service.command</Karaf-Commands>
                     </instructions>
                 </configuration>
             </plugin>

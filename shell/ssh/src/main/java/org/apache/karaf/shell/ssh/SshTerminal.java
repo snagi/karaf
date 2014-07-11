@@ -18,24 +18,23 @@
  */
 package org.apache.karaf.shell.ssh;
 
-import jline.TerminalSupport;
+import org.apache.karaf.shell.api.console.Signal;
+import org.apache.karaf.shell.api.console.Terminal;
+import org.apache.karaf.shell.support.terminal.SignalSupport;
 import org.apache.sshd.server.Environment;
 
-public class SshTerminal extends TerminalSupport {
+public class SshTerminal extends SignalSupport implements Terminal {
 
     private Environment environment;
 
-
     public SshTerminal(Environment environment) {
-        super(true);
-        setAnsiSupported(true);
         this.environment = environment;
-    }
-
-    public void init() throws Exception {
-    }
-
-    public void restore() throws Exception {
+        this.environment.addSignalListener(new org.apache.sshd.server.SignalListener() {
+            @Override
+            public void signal(org.apache.sshd.server.Signal signal) {
+                SshTerminal.this.signal(Signal.WINCH);
+            }
+        }, org.apache.sshd.server.Signal.WINCH);
     }
 
     @Override
@@ -46,7 +45,7 @@ public class SshTerminal extends TerminalSupport {
         } catch (Throwable t) {
             // Ignore
         }
-        return width > 0 ? width : super.getWidth();
+        return width > 0 ? width : 80;
     }
 
     @Override
@@ -57,7 +56,22 @@ public class SshTerminal extends TerminalSupport {
         } catch (Throwable t) {
             // Ignore
         }
-        return height > 0 ? height : super.getHeight();
+        return height > 0 ? height : 24;
+    }
+
+    @Override
+    public boolean isAnsiSupported() {
+        return true;
+    }
+
+    @Override
+    public boolean isEchoEnabled() {
+        return true;
+    }
+
+    @Override
+    public void setEchoEnabled(boolean enabled) {
+        // TODO: how to disable echo over ssh ?
     }
 
 }

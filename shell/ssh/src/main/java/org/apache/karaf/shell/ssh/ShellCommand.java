@@ -18,19 +18,26 @@
  */
 package org.apache.karaf.shell.ssh;
 
-import java.io.*;
+import java.io.CharArrayWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.Reader;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 
 import javax.security.auth.Subject;
 
-import org.apache.felix.service.command.CommandProcessor;
-import org.apache.felix.service.command.CommandSession;
-import org.apache.felix.service.command.Converter;
-import org.apache.karaf.jaas.modules.JaasHelper;
-import org.apache.karaf.shell.util.ShellUtil;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.api.console.SessionFactory;
+import org.apache.karaf.shell.support.ShellUtil;
 import org.apache.karaf.util.StreamUtils;
+import org.apache.karaf.util.jaas.JaasHelper;
 import org.apache.sshd.server.Command;
 import org.apache.sshd.server.Environment;
 import org.apache.sshd.server.ExitCallback;
@@ -57,10 +64,10 @@ public class ShellCommand implements Command, SessionAware {
     private OutputStream err;
     private ExitCallback callback;
     private ServerSession session;
-    private CommandProcessor commandProcessor;
+    private SessionFactory sessionFactory;
 
-    public ShellCommand(CommandProcessor commandProcessor, String command) {
-        this.commandProcessor = commandProcessor;
+    public ShellCommand(SessionFactory sessionFactory, String command) {
+        this.sessionFactory = sessionFactory;
         this.command = command;
     }
 
@@ -85,10 +92,9 @@ public class ShellCommand implements Command, SessionAware {
     }
 
     public void start(final Environment env) throws IOException {
+        int exitStatus = 0;
         try {
-            final CommandSession session = commandProcessor.createSession(in, new PrintStream(out), new PrintStream(err));
-            session.put("SCOPE", "shell:osgi:*");
-            session.put("APPLICATION", System.getProperty("karaf.name", "root"));
+            final Session session = sessionFactory.create(in, new PrintStream(out), new PrintStream(err));
             for (Map.Entry<String,String> e : env.getEnv().entrySet()) {
                 session.put(e.getKey(), e.getValue());
             }
@@ -114,23 +120,26 @@ public class ShellCommand implements Command, SessionAware {
                 }
                 if (result != null)
                 {
-                    session.getConsole().println(session.format(result, Converter.INSPECT));
+                    // TODO: print the result of the command ?
+//                    session.getConsole().println(session.format(result, Converter.INSPECT));
                 }
             } catch (Throwable t) {
+                exitStatus = 1;
                 ShellUtil.logException(session, t);
             }
         } catch (Exception e) {
+            exitStatus = 1;
             throw (IOException) new IOException("Unable to start shell").initCause(e);
         } finally {
             StreamUtils.close(in, out, err);
-            callback.onExit(0);
+            callback.onExit(exitStatus);
         }
     }
 
     public void destroy() {
 	}
 
-    private void executeScript(String scriptFileName, CommandSession session) {
+    private void executeScript(String scriptFileName, Session session) {
         if (scriptFileName != null) {
             Reader r = null;
             try {

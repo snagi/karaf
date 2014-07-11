@@ -24,13 +24,13 @@
     <parent>
         <groupId>org.apache.karaf.demos</groupId>
         <artifactId>org.apache.karaf.demos.deployer</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.karaf.demos.deployer.bundle</groupId>
     <artifactId>my-bundle</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Karaf :: Demos :: Deployer :: Bundle</name>
@@ -40,7 +40,6 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>4.2.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -50,7 +49,6 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>

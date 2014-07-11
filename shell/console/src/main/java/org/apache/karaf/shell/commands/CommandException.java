@@ -18,12 +18,14 @@
  */
 package org.apache.karaf.shell.commands;
 
-import org.fusesource.jansi.Ansi;
+import org.apache.karaf.shell.commands.ansi.SimpleAnsi;
+
 
 /**
  * Base class for exceptions thrown when executing commands.
  */
 @SuppressWarnings("serial")
+@Deprecated
 public class CommandException extends Exception {
 
     private String help;
@@ -55,11 +57,9 @@ public class CommandException extends Exception {
 
     public String getNiceHelp() {
         return  help != null ? help
-                    : Ansi.ansi()
-                        .fg(Ansi.Color.RED)
-                        .a("Error executing command: ")
-                        .a(getMessage() != null ? getMessage() : getClass().getName())
-                        .fg(Ansi.Color.DEFAULT).toString();
+                    : SimpleAnsi.COLOR_RED + "Error executing command: " 
+                    + getMessage() != null ? getMessage() : getClass().getName()
+                    + SimpleAnsi.COLOR_DEFAULT;
     }
 
 }

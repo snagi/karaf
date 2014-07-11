@@ -16,15 +16,14 @@
  */
 package org.apache.karaf.features;
 
-import java.net.URI;
 import junit.framework.TestCase;
-import org.apache.karaf.features.internal.RepositoryImpl;
+import org.apache.karaf.features.internal.service.RepositoryImpl;
 
 
 public class ConditionalTest extends TestCase {
 
     public void testLoad() throws Exception {
-        RepositoryImpl r = new RepositoryImpl(getClass().getResource("internal/f06.xml").toURI());
+        RepositoryImpl r = new RepositoryImpl(getClass().getResource("internal/service/f06.xml").toURI());
         // Check repo
         Feature[] features = r.getFeatures();
         assertNotNull(features);
@@ -32,16 +31,23 @@ public class ConditionalTest extends TestCase {
         Feature feature = features[0];
 
         assertNotNull(feature.getConditional());
-        assertEquals(1,feature.getConditional().size());
+        assertEquals(2,feature.getConditional().size());
 
         Conditional conditional = feature.getConditional().get(0);
         assertNotNull(conditional.getCondition());
         assertEquals(1,conditional.getCondition().size());
-        Dependency dependency = conditional.getCondition().get(0);
+        String dependency = conditional.getCondition().get(0);
         assertNotNull(dependency);
-        assertEquals(dependency.getName(),"http");
+        assertEquals("http", dependency);
         assertNotNull(conditional.getBundles());
         assertEquals(1, feature.getConditional().get(0).getBundles().size());
+
+        conditional = feature.getConditional().get(1);
+        assertNotNull(conditional.getCondition());
+        assertEquals(1,conditional.getCondition().size());
+        dependency = conditional.getCondition().get(0);
+        assertNotNull(dependency);
+        assertEquals("req:osgi.ee;filter:=\"(&(osgi.ee=JavaSE)(!(version>=1.7)))\"", dependency);
 
         String wrapperName = "my6/1.5.3-beta-3".replaceAll("[^A-Za-z0-9 ]", "_");
     }

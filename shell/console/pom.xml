@@ -24,14 +24,14 @@
     <parent>
         <groupId>org.apache.karaf.shell</groupId>
         <artifactId>shell</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.karaf.shell.console</artifactId>
     <packaging>bundle</packaging>
     <name>Apache Karaf :: Shell :: Console</name>
-    <description>This bundle provides OSGi shell integration and console support.</description>
+    <description>This bundle provides compatibility with the previous console.</description>
 
     <properties>
         <appendedResourcesDirectory>${basedir}/../../etc/appended-resources</appendedResourcesDirectory>
@@ -65,7 +65,16 @@
             <groupId>org.apache.karaf.jaas</groupId>
             <artifactId>org.apache.karaf.jaas.boot</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.karaf.shell</groupId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
+        </dependency>
 
+        <dependency>
+            <groupId>org.apache.karaf</groupId>
+            <artifactId>org.apache.karaf.util</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.aries.blueprint</groupId>
             <artifactId>org.apache.aries.blueprint.api</artifactId>
@@ -79,6 +88,11 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.utils</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -127,37 +141,47 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
+                        <Fragment-Host>
+                            org.apache.karaf.shell.core
+                        </Fragment-Host>
                         <Import-Package>
                             !org.apache.felix.gogo.runtime.*,
+                            !org.apache.karaf.shell.inject.impl,
                             org.osgi.service.event;resolution:=optional,
                             org.apache.karaf.branding;resolution:=optional,
                             org.apache.sshd.agent*;resolution:=optional,
                             *
                         </Import-Package>
                         <Export-Package>
-                        	org.apache.karaf.shell.commands;version=${project.version},
-                            org.apache.karaf.shell.commands;version=2.3.0,
-                            org.apache.karaf.shell.commands.basic;version=${project.version},
-                            org.apache.karaf.shell.commands.basic;version=2.3.0,
-                            org.apache.karaf.shell.commands.converter;version=${project.version},
-                            org.apache.karaf.shell.commands.converter;version=2.3.0,
-                            org.apache.karaf.shell.commands.meta;version=${project.version},
-                            org.apache.karaf.shell.commands.meta;version=2.3.0,
-                        	org.apache.karaf.shell.console;version=${project.version},
-                            org.apache.karaf.shell.console;version=2.3.0,
-                        	org.apache.karaf.shell.console.commands;version=${project.version},
-                            org.apache.karaf.shell.console.commands;version=2.3.0,
-                        	org.apache.karaf.shell.console.completer;version=${project.version},
-                            org.apache.karaf.shell.console.completer;version=2.3.0,
-                        	org.apache.karaf.shell.util;version=${project.version},
-                            org.apache.karaf.shell.util;version=2.3.0,
-                            org.apache.felix.gogo*;version=${felix.gogo.version},
-                            org.apache.felix.service.command;version=${felix.gogo.version};status=provisional;mandatory:=status,
-                            org.apache.felix.service.threadio;version=${felix.gogo.version};status=provisional;mandatory:=status,
+                        	org.apache.karaf.shell.commands;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.commands;version=2.3.0;-noimport:=true,
+                            org.apache.karaf.shell.commands.basic;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.commands.basic;version=2.3.0;-noimport:=true,
+                            org.apache.karaf.shell.commands.converter;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.commands.converter;version=2.3.0;-noimport:=true,
+                            org.apache.karaf.shell.commands.meta;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.commands.meta;version=2.3.0;-noimport:=true,
+                        	org.apache.karaf.shell.console;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.console;version=2.3.0;-noimport:=true,
+                        	org.apache.karaf.shell.console.commands;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.console.commands;version=2.3.0;-noimport:=true,
+                        	org.apache.karaf.shell.console.completer;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.console.completer;version=2.3.0;-noimport:=true,
+                            org.apache.karaf.shell.console.factory;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.inject;version=${project.version};-noimport:=true,
+                        	org.apache.karaf.shell.util;version=${project.version};-noimport:=true,
+                            org.apache.karaf.shell.util;version=2.3.0;-noimport:=true,
+                            org.apache.felix.gogo*;version=${felix.gogo.version};-noimport:=true,
+                            org.apache.felix.service.command;version=${felix.gogo.version};status=provisional;mandatory:=status;-noimport:=true,
+                            org.apache.felix.service.threadio;version=${felix.gogo.version};status=provisional;mandatory:=status;-noimport:=true,
                         </Export-Package>
                         <Private-Package>
+                        	org.apache.karaf.shell.commands.ansi,
+                            org.apache.karaf.shell.compat,
                         	org.apache.karaf.shell.console.impl*,
                             org.apache.karaf.shell.security.impl*,
+                            org.apache.karaf.shell.inject.impl*,
+                            org.apache.karaf.util.jaas
                         </Private-Package>
                         <Main-Class>
                             org.apache.karaf.shell.console.impl.Main

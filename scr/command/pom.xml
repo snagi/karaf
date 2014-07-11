@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf.scr</groupId>
         <artifactId>scr</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -35,15 +35,10 @@
 
     <properties>
         <appendedResourcesDirectory>${basedir}/../../etc/appended-resources</appendedResourcesDirectory>
+        <karaf.service.ranking>1</karaf.service.ranking>
     </properties>
 
     <dependencies>
-
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -52,7 +47,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.karaf.shell</groupId>
-            <artifactId>org.apache.karaf.shell.console</artifactId>
+            <artifactId>org.apache.karaf.shell.core</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -93,7 +88,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Service-Component>*</Service-Component>
+                        <Karaf-Commands>*</Karaf-Commands>
                     </instructions>
                 </configuration>
             </plugin>

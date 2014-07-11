@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.karaf.bundle.core.BundleService;
 import org.apache.karaf.bundle.core.BundleWatcher;
-import org.ops4j.pax.url.mvn.Parser;
+import org.apache.karaf.util.maven.Parser;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -42,7 +43,6 @@ import org.osgi.framework.BundleListener;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.wiring.FrameworkWiring;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,12 +92,18 @@ public class BundleWatcherImpl implements Runnable, BundleListener, BundleWatche
                 oldCounter = counter.get();
                 watchedBundles.clear();
                 for (String bundleURL : watchURLs) {
-                    for (Bundle bundle : bundleService.getBundlesByURL(bundleURL)) {
-                        watchedBundles.add(bundle);
+                    // Transform into regexp
+                    bundleURL = bundleURL.replaceAll("\\*", ".*");
+                    for (Bundle bundle : bundleService.selectBundles(Collections.singletonList(bundleURL), false)) {
+                        if (isMavenSnapshotUrl(bundle.getLocation())) {
+                            watchedBundles.add(bundle);
+                        }
                     }
                 }
             }
             if (watchedBundles.size() > 0) {
+                // Get the wiring before any in case of a refresh of a dependency
+                FrameworkWiring wiring = bundleContext.getBundle(0).adapt(FrameworkWiring.class);
                 File localRepository = this.localRepoDetector.getLocalRepository();
                 List<Bundle> updated = new ArrayList<Bundle>();
                 for (Bundle bundle : watchedBundles) {
@@ -109,17 +115,25 @@ public class BundleWatcherImpl implements Runnable, BundleListener, BundleWatche
                         logger.error("Error updating bundle.", ex);
                     }
                 }
-                try {
-                    final CountDownLatch latch = new CountDownLatch(1);
-                    FrameworkWiring wiring = bundleContext.getBundle(0).adapt(FrameworkWiring.class);
-                    wiring.refreshBundles(updated, new FrameworkListener() {
-                        public void frameworkEvent(FrameworkEvent event) {
-                            latch.countDown();
+                if (!updated.isEmpty()) {
+                    try {
+                        final CountDownLatch latch = new CountDownLatch(1);
+                        wiring.refreshBundles(updated, new FrameworkListener() {
+                            public void frameworkEvent(FrameworkEvent event) {
+                                latch.countDown();
+                            }
+                        });
+                        latch.await();
+                    } catch (InterruptedException e) {
+                        running.set(false);
+                    }
+                    for (Bundle bundle : updated) {
+                        try {
+                            bundle.start(Bundle.START_TRANSIENT);
+                        } catch (BundleException ex) {
+                            logger.warn("Error starting bundle", ex);
                         }
-                    });
-                    latch.await();
-                } catch (InterruptedException e) {
-                    running.set(false);
+                    }
                 }
             }
             try {
@@ -134,14 +148,19 @@ public class BundleWatcherImpl implements Runnable, BundleListener, BundleWatche
         }
     }
 
+    private boolean isMavenSnapshotUrl(String url) {
+        return url.startsWith("mvn:") && url.contains("SNAPSHOT");
+    }
+
     private void updateBundleIfNecessary(File localRepository, List<Bundle> updated, Bundle bundle)
-        throws FileNotFoundException, BundleException, IOException {
+        throws BundleException, IOException {
         File location = getBundleExternalLocation(localRepository, bundle);
         if (location != null && location.exists() && location.lastModified() > bundle.getLastModified()) {
             InputStream is = new FileInputStream(location);
             try {
                 logger.info("[Watch] Updating watched bundle: " + bundle.getSymbolicName() + " ("
                             + bundle.getVersion() + ")");
+                bundle.stop(Bundle.STOP_TRANSIENT);
                 bundle.update(is);
                 updated.add(bundle);
             } finally {
@@ -240,7 +259,8 @@ public class BundleWatcherImpl implements Runnable, BundleListener, BundleWatche
 
 	@Override
 	public List<Bundle> getBundlesByURL(String urlFilter) {
-		return bundleService.getBundlesByURL(urlFilter);
+        urlFilter = urlFilter.replaceAll("\\*", ".*");
+		return bundleService.selectBundles(Collections.singletonList(urlFilter), false);
 	}
 
 }

@@ -214,7 +214,17 @@ public class LDAPLoginModule extends AbstractKarafLoginModule {
             }
             logger.debug("Get the user DN.");
             SearchResult result = (SearchResult) namingEnumeration.next();
-            userDN = (String) result.getName();
+            
+            // We need to do the following because slashes are handled badly. For example, when searching 
+            // for a user with lots of special characters like cn=admin,=+<>#;\
+            // SearchResult contains 2 different results:
+            // 
+            // SearchResult.getName = cn=admin\,\=\+\<\>\#\;\\\\
+            // SearchResult.getNameInNamespace = cn=admin\,\=\+\<\>#\;\\,ou=people,dc=example,dc=com
+            //
+            // the second escapes the slashes correctly.
+            userDN = result.getNameInNamespace().replace("," + userBaseDN, "");
+            
             namingEnumeration.close();
         } catch (Exception e) {
             throw new LoginException("Can't connect to the LDAP server: " + e.getMessage());
@@ -277,6 +287,7 @@ public class LDAPLoginModule extends AbstractKarafLoginModule {
             logger.debug("  base DN: " + roleBaseDN);
             roleFilter = roleFilter.replaceAll(Pattern.quote("%u"), Matcher.quoteReplacement(user));
             roleFilter = roleFilter.replaceAll(Pattern.quote("%dn"), Matcher.quoteReplacement(userDN));
+            roleFilter = roleFilter.replaceAll(Pattern.quote("%fqdn"), Matcher.quoteReplacement(userDN + "," + userBaseDN));
             roleFilter = roleFilter.replace("\\", "\\\\");
             logger.debug("  filter: " + roleFilter);
             NamingEnumeration namingEnumeration = context.search(roleBaseDN, roleFilter, controls);

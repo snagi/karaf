@@ -18,6 +18,7 @@ package org.apache.karaf.features;
 
 import java.net.URI;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,17 +26,38 @@ import java.util.Set;
  */
 public interface FeaturesService {
 
+    String ROOT_REGION = "root";
+
+    String UPDATE_SNAPSHOTS_NONE = "none";
+    String UPDATE_SNAPSHOTS_CRC = "crc";
+    String DEFAULT_UPDATE_SNAPSHOTS = UPDATE_SNAPSHOTS_CRC;
+    String UPDATE_SNAPSHOTS_ALWAYS = "always";
+
+    String DEFAULT_FEATURE_RESOLUTION_RANGE = "${range;[====,====]}";
+    String DEFAULT_BUNDLE_UPDATE_RANGE = "${range;[==,=+)}";
+
+    String UPDATEABLE_URIS = "mvn:.*SNAPSHOT|(?!mvn:).*";
+
     enum Option {
-        NoCleanIfFailure,
-        PrintBundlesToRefresh,
+        NoFailOnFeatureNotFound,
+        NoAutoRefreshManagedBundles,
+        NoAutoRefreshUnmanagedBundles,
         NoAutoRefreshBundles,
-        ContinueBatchOnFailure,
+        NoAutoStartBundles,
+        NoAutoManageBundles,
+        Simulate,
         Verbose
+    }
+
+    enum RequestedState {
+        Installed,
+        Resolved,
+        Started
     }
 
     /**
      * Validate repository contents.
-     * 
+     *
      * @param uri Repository uri.
      * @throws Exception When validation fails.
      */
@@ -48,32 +70,56 @@ public interface FeaturesService {
     void removeRepository(URI uri) throws Exception;
 
     void removeRepository(URI uri, boolean uninstall) throws Exception;
-    
+
     void restoreRepository(URI uri) throws Exception;
 
-    Repository[] listRepositories();
-    
-    Repository getRepository(String repoName);
+    Repository[] listRequiredRepositories() throws Exception;
+
+    Repository[] listRepositories() throws Exception;
+
+    Repository getRepository(String repoName) throws Exception;
 
     void installFeature(String name) throws Exception;
 
     void installFeature(String name, EnumSet<Option> options) throws Exception;
-    
+
     void installFeature(String name, String version) throws Exception;
 
     void installFeature(String name, String version, EnumSet<Option> options) throws Exception;
 
     void installFeature(Feature f, EnumSet<Option> options) throws Exception;
 
-    void installFeatures(Set<Feature> features, EnumSet<Option> options) throws Exception;
+    void installFeatures(Set<String> features, EnumSet<Option> options) throws Exception;
+
+    void installFeatures(Set<String> features, String region, EnumSet<Option> options) throws Exception;
+
+    void addRequirements(Map<String, Set<String>> requirements, EnumSet<Option> options) throws Exception;
+
+    void uninstallFeature(String name, EnumSet<Option> options) throws Exception;
 
     void uninstallFeature(String name) throws Exception;
-    
+
+    void uninstallFeature(String name, String version, EnumSet<Option> options) throws Exception;
+
     void uninstallFeature(String name, String version) throws Exception;
+
+    void uninstallFeatures(Set<String> features, EnumSet<Option> options) throws Exception;
+
+    void uninstallFeatures(Set<String> features, String region, EnumSet<Option> options) throws Exception;
+
+    void removeRequirements(Map<String, Set<String>> requirements, EnumSet<Option> options) throws Exception;
+
+    void updateFeaturesState(Map<String, Map<String, RequestedState>> stateChanges, EnumSet<Option> options) throws Exception;
 
     Feature[] listFeatures() throws Exception;
 
-    Feature[] listInstalledFeatures();
+    Feature[] listRequiredFeatures() throws Exception;
+
+    Feature[] listInstalledFeatures() throws Exception;
+
+    Map<String, Set<String>> listRequirements();
+
+    boolean isRequired(Feature f);
 
     boolean isInstalled(Feature f);
 
@@ -81,5 +127,10 @@ public interface FeaturesService {
 
     Feature getFeature(String name) throws Exception;
 
-	void refreshRepository(URI uri) throws Exception;
+    void refreshRepository(URI uri) throws Exception;
+
+    URI getRepositoryUriFor(String name, String version);
+
+    String[] getRepositoryNames();
+
 }

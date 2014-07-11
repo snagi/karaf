@@ -26,7 +26,6 @@ import java.security.KeyPair;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.service.command.CommandSession;
 import org.apache.sshd.agent.SshAgent;
 import org.apache.sshd.agent.SshAgentFactory;
 import org.apache.sshd.agent.SshAgentServer;
@@ -35,10 +34,11 @@ import org.apache.sshd.agent.local.AgentImpl;
 import org.apache.sshd.agent.local.AgentServerProxy;
 import org.apache.sshd.agent.local.ChannelAgentForwarding;
 import org.apache.sshd.common.Channel;
+import org.apache.sshd.common.FactoryManager;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.Session;
+import org.apache.sshd.common.session.ConnectionService;
 import org.apache.sshd.server.session.ServerSession;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,22 +49,12 @@ public class KarafAgentFactory implements SshAgentFactory {
     private final Map<String, AgentServerProxy> proxies = new ConcurrentHashMap<String, AgentServerProxy>();
     private final Map<String, SshAgent> locals = new ConcurrentHashMap<String, SshAgent>();
 
-    private BundleContext bundleContext;
-
-    public BundleContext getBundleContext() {
-        return bundleContext;
-    }
-
-    public void setBundleContext(BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
-    }
-
     public NamedFactory<Channel> getChannelForwardingFactory() {
         return new ChannelAgentForwarding.Factory();
     }
 
-    public SshAgent createClient(Session session) throws IOException {
-        String proxyId = session.getFactoryManager().getProperties().get(SshAgent.SSH_AUTHSOCKET_ENV_NAME);
+    public SshAgent createClient(FactoryManager manager) throws IOException {
+        String proxyId = manager.getProperties().get(SshAgent.SSH_AUTHSOCKET_ENV_NAME);
         if (proxyId == null) {
             throw new IllegalStateException("No " + SshAgent.SSH_AUTHSOCKET_ENV_NAME + " environment variable set");
         }
@@ -79,11 +69,12 @@ public class KarafAgentFactory implements SshAgentFactory {
         throw new IllegalStateException("No ssh agent found");
     }
 
-    public SshAgentServer createServer(Session session) throws IOException {
+    public SshAgentServer createServer(ConnectionService service) throws IOException {
+        Session session = service.getSession();
         if (!(session instanceof ServerSession)) {
             throw new IllegalStateException("The session used to create an agent server proxy must be a server session");
         }
-        final AgentServerProxy proxy = new AgentServerProxy((ServerSession) session);
+        final AgentServerProxy proxy = new AgentServerProxy(service);
         proxies.put(proxy.getId(), proxy);
         return new SshAgentServer() {
             public String getId() {
@@ -97,11 +88,11 @@ public class KarafAgentFactory implements SshAgentFactory {
         };
     }
 
-    public void registerCommandSession(CommandSession session) {
+    public void registerSession(org.apache.karaf.shell.api.console.Session session) {
         try {
             String user = (String) session.get("USER");
             SshAgent agent = new AgentImpl();
-            URL url = bundleContext.getBundle().getResource("karaf.key");
+            URL url = getClass().getClassLoader().getResource("karaf.key");
             InputStream is = url.openStream();
             ObjectInputStream r = new ObjectInputStream(is);
             KeyPair keyPair = (KeyPair) r.readObject();
@@ -114,7 +105,7 @@ public class KarafAgentFactory implements SshAgentFactory {
         }
     }
 
-    public void unregisterCommandSession(CommandSession session) {
+    public void unregisterSession(org.apache.karaf.shell.api.console.Session session) {
         try {
             if (session != null && session.get(SshAgent.SSH_AUTHSOCKET_ENV_NAME) != null) {
                 String agentId = (String) session.get(SshAgent.SSH_AUTHSOCKET_ENV_NAME);

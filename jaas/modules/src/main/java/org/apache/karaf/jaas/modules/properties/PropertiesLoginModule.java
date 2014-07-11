@@ -48,12 +48,26 @@ public class PropertiesLoginModule extends AbstractKarafLoginModule {
     static final String USER_FILE = "users";
 
     private String usersFile;
-
+    
+    private static PropertiesInstaller propertiesInstaller;
+    
+    
     public void initialize(Subject sub, CallbackHandler handler, Map sharedState, Map options) {
         super.initialize(sub,handler,options);
         usersFile = (String) options.get(USER_FILE);
         if (debug) {
             LOGGER.debug("Initialized debug={} usersFile={}", debug, usersFile);
+        }
+       
+        if (propertiesInstaller == null 
+            || (usersFile != null && !usersFile.equals(propertiesInstaller.getUsersFileName())) ) {
+       
+            LOGGER.debug("Register PropertiesInstaller service");
+            
+            propertiesInstaller = new PropertiesInstaller(this, usersFile);
+            if (this.bundleContext != null) {
+                this.bundleContext.registerService("org.apache.felix.fileinstall.ArtifactInstaller", propertiesInstaller, null);
+            }
         }
     }
 
@@ -65,12 +79,16 @@ public class PropertiesLoginModule extends AbstractKarafLoginModule {
         if (!f.exists()) {
             throw new LoginException("Users file not found at " + f);
         }
+
         Properties users;
         try {
             users = new Properties(f);
         } catch (IOException ioe) {
             throw new LoginException("Unable to load user properties file " + f);
         }
+
+        //encrypt all password if necessary
+        encryptedPassword(users);
 
         Callback[] callbacks = new Callback[2];
 
@@ -119,42 +137,6 @@ public class PropertiesLoginModule extends AbstractKarafLoginModule {
         String[] infos = userInfos.split(",");
         String storedPassword = infos[0];
         
-        // check if the stored password is flagged as encrypted
-        String encryptedPassword = getEncryptedPassword(storedPassword);
-        if (!storedPassword.equals(encryptedPassword)) {
-            if (debug) {
-                LOGGER.debug("The password isn't flagged as encrypted, encrypt it.");
-            }
-            if (debug) {
-                LOGGER.debug("Rebuild the user informations string.");
-            }
-            userInfos = encryptedPassword + ",";
-            for (int i = 1; i < infos.length; i++) {
-                if (i == (infos.length - 1)) {
-                    userInfos = userInfos + infos[i];
-                } else {
-                    userInfos = userInfos + infos[i] + ",";
-                }
-            }
-            if (debug) {
-                LOGGER.debug("Push back the user informations in the users properties.");
-            }
-            if (user.contains("\\")) {
-                users.remove(user);
-                user = user.replace("\\", "\\\\");
-            }
-            users.put(user, userInfos);
-            try {
-                if (debug) {
-                    LOGGER.debug("Store the users properties file.");
-                }
-                users.save();
-            } catch (IOException ioe) {
-                LOGGER.warn("Unable to write user properties file {}", f, ioe);
-            }
-            storedPassword = encryptedPassword;
-        }
-
         // check the provided password
         if (!checkPassword(password, storedPassword)) {
         	if (!this.detailedLoginExcepion) {
@@ -167,19 +149,19 @@ public class PropertiesLoginModule extends AbstractKarafLoginModule {
         principals = new HashSet<Principal>();
         principals.add(new UserPrincipal(user));
         for (int i = 1; i < infos.length; i++) {
-            if (infos[i].startsWith(PropertiesBackingEngine.GROUP_PREFIX)) {
+            if (infos[i].trim().startsWith(PropertiesBackingEngine.GROUP_PREFIX)) {
                 // it's a group reference
-                principals.add(new GroupPrincipal(infos[i].substring(PropertiesBackingEngine.GROUP_PREFIX.length())));
-                String groupInfo = (String) users.get(infos[i]);
+                principals.add(new GroupPrincipal(infos[i].trim().substring(PropertiesBackingEngine.GROUP_PREFIX.length())));
+                String groupInfo = (String) users.get(infos[i].trim());
                 if (groupInfo != null) {
                     String[] roles = groupInfo.split(",");
                     for (int j = 1; j < roles.length; j++) {
-                        principals.add(new RolePrincipal(roles[j]));
+                        principals.add(new RolePrincipal(roles[j].trim()));
                     }
                 }
             } else {
                 // it's an user reference
-                principals.add(new RolePrincipal(infos[i]));
+                principals.add(new RolePrincipal(infos[i].trim()));
             }
         }
 
@@ -206,6 +188,55 @@ public class PropertiesLoginModule extends AbstractKarafLoginModule {
             LOGGER.debug("logout");
         }
         return true;
+    }
+
+    
+    void encryptedPassword(Properties users) {
+        for (Object userName : users.keySet()) {
+            String user = (String)userName;
+            String userInfos = null;
+
+            userInfos = (String) users.get(user);
+                        
+            // the password is in the first position
+            String[] infos = userInfos.split(",");
+            String storedPassword = infos[0];
+            
+            // check if the stored password is flagged as encrypted
+            String encryptedPassword = getEncryptedPassword(storedPassword);
+            if (!storedPassword.equals(encryptedPassword)) {
+                if (debug) {
+                    LOGGER.debug("The password isn't flagged as encrypted, encrypt it.");
+                }
+                if (debug) {
+                    LOGGER.debug("Rebuild the user informations string.");
+                }
+                userInfos = encryptedPassword + ",";
+                for (int i = 1; i < infos.length; i++) {
+                    if (i == (infos.length - 1)) {
+                        userInfos = userInfos + infos[i];
+                    } else {
+                        userInfos = userInfos + infos[i] + ",";
+                    }
+                }
+                if (debug) {
+                    LOGGER.debug("Push back the user informations in the users properties.");
+                }
+                if (user.contains("\\")) {
+                    users.remove(user);
+                    user = user.replace("\\", "\\\\");
+                }
+                users.put(user, userInfos);
+                try {
+                    if (debug) {
+                        LOGGER.debug("Store the users properties file.");
+                    }
+                    users.save();
+                } catch (IOException ioe) {
+                    LOGGER.warn("Unable to write user properties file ", ioe);
+                }
+            }
+        }
     }
 
 }

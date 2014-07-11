@@ -274,12 +274,25 @@ public class ACLConfigurationParser {
                 return s2.length() - s1.length();
             }
         });
+        
         for (Enumeration<String> e = properties.keys(); e.hasMoreElements(); ) {
             String key = e.nextElement();
             if (key.endsWith("*")) {
                 String prefix = key.substring(0, key.length() - 1);
                 if (methodName.startsWith(prefix)) {
                     wildcardRules.put(prefix, properties.get(key).toString());
+                }
+            }
+            if (key.startsWith("*")) {
+                String suffix = key.substring(1);
+                if (methodName.endsWith(suffix)) {
+                    wildcardRules.put(suffix, properties.get(key).toString());
+                }
+            }
+            if (key.startsWith("*") && key.endsWith("*") && key.length() > 1) {
+                String middle = key.substring(1, key.length() - 1);
+                if (methodName.contains(middle)) {
+                    wildcardRules.put(middle, properties.get(key).toString());
                 }
             }
         }

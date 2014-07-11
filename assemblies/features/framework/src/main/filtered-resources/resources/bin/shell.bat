@@ -113,15 +113,19 @@ if not "%JAVA%" == "" goto :Check_JAVA_END
 
 if "%JAVA_OPTS%" == "" set JAVA_OPTS=%DEFAULT_JAVA_OPTS%
 
+if "%EXTRA_JAVA_OPTS%" == "" goto :KARAF_EXTRA_JAVA_OPTS_END
+    set JAVA_OPTS="%EXTRA_JAVA_OPTS% %JAVA_OPTS%"
+:KARAF_EXTRA_JAVA_OPTS_END
+
 if "%KARAF_DEBUG%" == "" goto :KARAF_DEBUG_END
     rem Use the defaults if JAVA_DEBUG_OPTS was not set
     if "%JAVA_DEBUG_OPTS%" == "" set JAVA_DEBUG_OPTS=%DEFAULT_JAVA_DEBUG_OPTS%
     
-    set "JAVA_OPTS=%JAVA_DEBUG_OPTS% %JAVA_OPTS%"
+    set JAVA_OPTS="%JAVA_DEBUG_OPTS% %JAVA_OPTS%"
     call :warn Enabling Java debug options: %JAVA_DEBUG_OPTS%
 :KARAF_DEBUG_END
 
-set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.console\${project.version}\org.apache.karaf.shell.console-${project.version}.jar
+set CLASSPATH=%KARAF_HOME%\system\org\apache\karaf\shell\org.apache.karaf.shell.core\${project.version}\org.apache.karaf.shell.core-${project.version}.jar
 set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\org\ops4j\pax\logging\pax-logging-api\${pax.logging.version}\pax-logging-api-${pax.logging.version}.jar
 set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\jline\jline\${jline.version}\jline-${jline.version}.jar
 
@@ -129,7 +133,7 @@ set CLASSPATH=%CLASSPATH%;%KARAF_HOME%\system\jline\jline\${jline.version}\jline
     if "%SHIFT%" == "true" SET ARGS=%2 %3 %4 %5 %6 %7 %8
     if not "%SHIFT%" == "true" SET ARGS=%1 %2 %3 %4 %5 %6 %7 %8
     rem Execute the Java Virtual Machine
-    "%JAVA%" %JAVA_OPTS% %OPTS% -classpath "%CLASSPATH%" -Dkaraf.instances="%KARAF_HOME%\instances" -Dkaraf.home="%KARAF_HOME%" -Dkaraf.base="%KARAF_BASE%" -Dkaraf.etc="%KARAF_ETC%" -Djava.io.tmpdir="%KARAF_DATA%\tmp" -Djava.util.logging.config.file="%KARAF_BASE%\etc\java.util.logging.properties" -Djavax.management.builder.initial=org.apache.karaf.management.boot.KarafMBeanServerBuilder %KARAF_OPTS% org.apache.karaf.shell.console.impl.Main --classpath="%KARAF_HOME%\system" %ARGS%
+    "%JAVA%" %JAVA_OPTS% %OPTS% -classpath "%CLASSPATH%" -Dkaraf.instances="%KARAF_HOME%\instances" -Dkaraf.home="%KARAF_HOME%" -Dkaraf.base="%KARAF_BASE%" -Dkaraf.etc="%KARAF_ETC%" -Djava.io.tmpdir="%KARAF_DATA%\tmp" -Djava.util.logging.config.file="%KARAF_BASE%\etc\java.util.logging.properties" %KARAF_OPTS% org.apache.karaf.shell.impl.console.standalone.Main --classpath="%KARAF_HOME%\system" %ARGS%
 
 rem # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 

@@ -17,7 +17,9 @@
 package org.apache.karaf.scr.command.completer;
 
 import org.apache.felix.scr.Component;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
 
+@Service
 public class ActivateCompleter extends ScrCompleterSupport {
 
     /**

@@ -21,12 +21,14 @@ import java.util.List;
 
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.features.Repository;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.commands.Option;
-import org.apache.karaf.shell.console.MultiException;
-import org.apache.karaf.shell.table.ShellTable;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.support.MultiException;
+import org.apache.karaf.shell.support.table.ShellTable;
 
 @Command(scope = "feature", name = "repo-list", description = "Displays a list of all defined repositories.")
+@Service
 public class RepoListCommand extends FeaturesCommandSupport {
 
     @Option(name="-r", description="Reload all feature urls", required = false, multiValued = false)
@@ -47,12 +49,14 @@ public class RepoListCommand extends FeaturesCommandSupport {
 
         Repository[] repos = featuresService.listRepositories();
      	for (Repository repo : repos) {
-     	    table.addRow().addContent(repo.getName(), repo.getURI().toString()); 
+            if (repo != null) {
+     	        table.addRow().addContent(repo.getName(), repo.getURI().toString()); 
+            }
      	}
      	table.print(System.out, !noFormat);
     }
 
-    private void reloadAllRepos(FeaturesService featuresService) throws MultiException {
+    private void reloadAllRepos(FeaturesService featuresService) throws Exception {
         System.out.println("Reloading all repositories from their urls");
         System.out.println();
         List<Exception> exceptions = new ArrayList<Exception>();

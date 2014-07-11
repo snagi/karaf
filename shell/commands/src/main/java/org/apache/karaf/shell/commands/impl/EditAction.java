@@ -27,26 +27,34 @@ import java.net.URLConnection;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import jline.Terminal;
-import org.apache.karaf.shell.commands.Argument;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.console.AbstractAction;
+import jline.TerminalSupport;
+import org.apache.karaf.shell.api.action.Action;
+import org.apache.karaf.shell.api.action.Argument;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.console.Terminal;
+import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
 import org.apache.karaf.util.StreamUtils;
 import org.jledit.ConsoleEditor;
 import org.jledit.EditorFactory;
 
 @Command(scope = "shell", name = "edit", description = "Calls a text editor.")
-public class EditAction extends AbstractAction {
+@Service
+public class EditAction implements Action {
 
     private final Pattern URL_PATTERN = Pattern.compile("[^: ]+:[^ ]+");
 
     @Argument(index = 0, name = "url", description = "The url of the resource to edit.", required = true, multiValued = false)
     private String url;
 
+    @Reference
     private EditorFactory editorFactory;
 
+    @Reference
+    Terminal terminal;
+
     @Override
-    protected Object doExecute() throws Exception {
+    public Object execute() throws Exception {
         URLConnection connection = null;
         InputStream is = null;
         OutputStream os = null;
@@ -91,7 +99,7 @@ public class EditAction extends AbstractAction {
                 }
 
                 fos = new FileOutputStream(f);
-                copy(is, fos);
+                StreamUtils.copy(is, fos);
             } catch (Exception ex) {
                 System.out.println("Failed to copy resource from url:" + sourceUrl + " to tmp file: " + path + "  for editing.");
             } finally {
@@ -120,7 +128,7 @@ public class EditAction extends AbstractAction {
         if (!isLocal) {
             FileInputStream fis = new FileInputStream(path);
             try {
-                copy(fis, os);
+                StreamUtils.copy(fis, os);
             } finally {
                 StreamUtils.close(fis);
             }
@@ -133,6 +141,7 @@ public class EditAction extends AbstractAction {
         if (os != null) {
             StreamUtils.close(os);
         }
+
         return null;
     }
 
@@ -142,28 +151,21 @@ public class EditAction extends AbstractAction {
      * @return
      * @throws Exception
      */
-    private Terminal getTerminal() throws Exception {
-        Object terminalObject = session.get(".jline.terminal");
-        if (terminalObject instanceof Terminal) {
-            return (Terminal) terminalObject;
+    private jline.Terminal getTerminal() throws Exception {
+        try {
+            return (jline.Terminal) terminal.getClass().getMethod("getTerminal").invoke(terminal);
+        } catch (Throwable t) {
+            return new TerminalSupport(true) {
+                @Override
+                public int getWidth() {
+                    return terminal.getWidth();
+                }
 
-        }
-        throw new IllegalStateException("Could not get Terminal from CommandSession.");
-    }
-
-    /**
-     * Copies the content of {@link InputStream} to {@link OutputStream}.
-     *
-     * @param input
-     * @param output
-     * @throws IOException
-     */
-    private void copy(final InputStream input, final OutputStream output) throws IOException {
-        byte[] buffer = new byte[1024 * 16];
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            output.flush();
+                @Override
+                public int getHeight() {
+                    return terminal.getHeight();
+                }
+            };
         }
     }
 

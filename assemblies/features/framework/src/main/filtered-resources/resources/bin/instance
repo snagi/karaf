@@ -188,7 +188,7 @@ locateJava() {
     fi
 
     if [ "x$JAVA_HOME" = "x" ] && [ "$darwin" = "true" ]; then
-        JAVA_HOME="$(/usr/libexec/java_home)"
+        JAVA_HOME="$(/usr/libexec/java_home -v 1.7)"
     fi
     if [ "x$JAVA" = "x" ] && [ -r /etc/gentoo-release ] ; then
         JAVA_HOME=`java-config --jre-home`
@@ -234,6 +234,10 @@ setupDebugOptions() {
     fi
     export JAVA_OPTS
 
+    if [ "x$EXTRA_JAVA_OPTS" != "x" ]; then
+        JAVA_OPTS="$EXTRA_JAVA_OPTS $JAVA_OPTS"
+    fi
+
     # Set Debug options if enabled
     if [ "x$KARAF_DEBUG" != "x" ]; then
         # Use the defaults if JAVA_DEBUG_OPTS was not set
@@ -271,15 +275,12 @@ setupDefaults() {
         fi
     fi
 
-    # Add the jars in the lib dir
-    for file in "$KARAF_HOME"/lib/*.jar
-    do
-        if [ -z "$CLASSPATH" ]; then
-            CLASSPATH="$file"
-        else
-            CLASSPATH="$CLASSPATH:$file"
-        fi
-    done
+    # Setup classpath
+    CLASSPATH="$KARAF_HOME/system/org/apache/karaf/instance/org.apache.karaf.instance.core/${project.version}/org.apache.karaf.shell.instance-${project.version}.jar"
+    CLASSPATH="$CLASSPATH:$KARAF_HOME/system/org/apache/karaf/shell/org.apache.karaf.shell.core/${project.version}/org.apache.karaf.shell.core-${project.version}.jar"
+    CLASSPATH="$CLASSPATH:$KARAF_HOME/system/org/ops4j/pax/logging/pax-logging-api/${pax.logging.version}/pax-logging-api-${pax.logging.version}.jar"
+    CLASSPATH="$CLASSPATH:$KARAF_HOME/system/jline/jline/${jline.version}/jline-${jline.version}.jar"
+
     DEFAULT_JAVA_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
 
     ##
@@ -326,8 +327,6 @@ init() {
 }
 
 run() {
-
-    CLASSPATH="${KARAF_HOME}/system/org/apache/karaf/instance/org.apache.karaf.instance.command/${project.version}/org.apache.karaf.instance.command-${project.version}.jar:${KARAF_HOME}/system/org/apache/karaf/instance/org.apache.karaf.instance.core/${project.version}/org.apache.karaf.instance.core-${project.version}.jar:${KARAF_HOME}/system/org/apache/karaf/shell/org.apache.karaf.shell.console/${project.version}/org.apache.karaf.shell.console-${project.version}.jar:${KARAF_HOME}/system/org/apache/karaf/shell/org.apache.karaf.shell.table/${project.version}/org.apache.karaf.shell.table-${project.version}.jar:${KARAF_HOME}/system/org/apache/aries/blueprint/org.apache.aries.blueprint.api/${aries.blueprint.api.version}/org.apache.aries.blueprint.api-${aries.blueprint.api.version}.jar:${KARAF_HOME}/system/org/apache/aries/blueprint/org.apache.aries.blueprint.core/${aries.blueprint.core.version}/org.apache.aries.blueprint.core-${aries.blueprint.core.version}.jar:${KARAF_HOME}/system/org/apache/aries/blueprint/org.apache.aries.blueprint.cm/${aries.blueprint.cm.version}/org.apache.aries.blueprint.cm-${aries.blueprint.cm.version}.jar:${KARAF_HOME}/system/org/ops4j/pax/logging/pax-logging-api/${pax.logging.version}/pax-logging-api-${pax.logging.version}.jar:${KARAF_HOME}/system/org/apache/felix/org.apache.felix.framework/${felix.framework.version}/org.apache.felix.framework-${felix.framework.version}.jar:${KARAF_HOME}/system/jline/jline/${jline.version}/jline-${jline.version}.jar:$CLASSPATH"
 
     if $cygwin; then
         KARAF_HOME=`cygpath --path --windows "$KARAF_HOME"`

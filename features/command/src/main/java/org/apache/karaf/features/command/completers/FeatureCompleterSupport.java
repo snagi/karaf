@@ -20,8 +20,11 @@ import java.util.List;
 
 import org.apache.karaf.features.Feature;
 import org.apache.karaf.features.FeaturesService;
-import org.apache.karaf.shell.console.Completer;
-import org.apache.karaf.shell.console.completer.StringsCompleter;
+import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.console.CommandLine;
+import org.apache.karaf.shell.api.console.Completer;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.support.completers.StringsCompleter;
 
 /**
  * Base completer for feature commands.
@@ -31,13 +34,14 @@ public abstract class FeatureCompleterSupport implements Completer {
     /**
      * Feature service.
      */
+    @Reference
     protected FeaturesService featuresService;
 
     public void setFeaturesService(FeaturesService featuresService) {
         this.featuresService = featuresService;
     }
 
-    public int complete(final String buffer, final int cursor, @SuppressWarnings("rawtypes") final List candidates) {
+    public int complete(Session session, final CommandLine commandLine, final List<String> candidates) {
         StringsCompleter delegate = new StringsCompleter();
         try {
             for (Feature feature : featuresService.listFeatures()) {
@@ -48,7 +52,7 @@ public abstract class FeatureCompleterSupport implements Completer {
         } catch (Exception e) {
             // Ignore
         }
-        return delegate.complete(buffer, cursor, candidates);
+        return delegate.complete(session, commandLine, candidates);
     }
 
     /**

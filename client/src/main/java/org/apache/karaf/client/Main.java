@@ -34,10 +34,11 @@ import org.apache.sshd.SshClient;
 import org.apache.sshd.agent.SshAgent;
 import org.apache.sshd.agent.local.AgentImpl;
 import org.apache.sshd.agent.local.LocalAgentFactory;
+import org.apache.sshd.client.UserInteraction;
 import org.apache.sshd.client.channel.ChannelShell;
-import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
 import org.apache.sshd.common.RuntimeSshException;
+import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.impl.SimpleLogger;
 
@@ -74,41 +75,43 @@ public class Main {
 
         SshClient client = null;
         Terminal terminal = null;
+        int exitStatus = 0;
         try {
+            final Console console = System.console();
             client = SshClient.setUpDefaultClient();
-            setupAgent(config.getUser(), client);
+            setupAgent(config.getUser(), config.getKeyFile(), client);
+            client.setUserInteraction(new UserInteraction() {
+                public void welcome(String banner) {
+                    System.out.println(banner);
+                }
+
+                public String[] interactive(String destination, String name, String instruction, String[] prompt, boolean[] echo) {
+                    String[] answers = new String[prompt.length];
+                    try {
+                        for (int i = 0; i < prompt.length; i++) {
+                            if (console != null) {
+                                if (echo[i]) {
+                                    answers[i] = console.readLine(prompt[i] + " ");
+                                } else {
+                                    answers[i] = new String(console.readPassword(prompt[i] + " "));
+                                }
+                            }
+                        }
+                    } catch (IOError e) {
+                    }
+                    return answers;
+                }
+            });
             client.start();
-            ClientSession session = connectWithRetries(client, config);
-            Console console = System.console();
             if (console != null) {
                 console.printf("Logging in as %s\n", config.getUser());
             }
-            if (!session.authAgent(config.getUser()).await().isSuccess()) {
-                AuthFuture authFuture;
-                boolean useDefault = config.getPassword() != null;
-                do {
-                    String password;
-                    if (useDefault) {
-                        password = config.getPassword();
-                        useDefault = false;
-                    } else {
-                        if (console != null) {
-                            char[] readPassword = console.readPassword("Password: ");
-                            if (readPassword != null) {
-                                password = new String(readPassword);
-                            } else {
-                                return;
-                            }
-                        } else {
-                            throw new Exception("Unable to prompt password: could not get system console");
-                        }
-                    }
-                    authFuture = session.authPassword(config.getUser(), password);
-                } while (authFuture.await().isFailure());
-                if (!authFuture.isSuccess()) {
-                    throw new Exception("Authentication failure");
-                }
+            ClientSession session = connectWithRetries(client, config);
+            if (config.getPassword() != null) {
+                session.addPasswordIdentity(config.getPassword());
             }
+            session.auth().verify();
+
             ClientChannel channel;
             if (config.getCommand().length() > 0) {
                 channel = session.createChannel("exec", config.getCommand() + "\n");
@@ -134,6 +137,9 @@ public class Main {
             channel.setErr(AnsiConsole.wrapOutputStream(System.err));
             channel.open();
             channel.waitFor(ClientChannel.CLOSED, 0);
+            if (channel.getExitStatus() != null) {
+                exitStatus = channel.getExitStatus();
+            }
         } catch (Throwable t) {
             if (config.getLevel() > SimpleLogger.WARN) {
                 t.printStackTrace();
@@ -153,13 +159,13 @@ public class Main {
             } catch (Throwable t) {
             }
         }
-        System.exit(0);
+        System.exit(exitStatus);
     }
 
-    private static void setupAgent(String user, SshClient client) {
+    private static void setupAgent(String user, String keyFile, SshClient client) {
         SshAgent agent;
         URL builtInPrivateKey = Main.class.getClassLoader().getResource("karaf.key");
-        agent = startAgent(user, builtInPrivateKey);
+        agent = startAgent(user, builtInPrivateKey, keyFile);
         client.setAgentFactory(new LocalAgentFactory(agent));
         client.getProperties().put(SshAgent.SSH_AUTHSOCKET_ENV_NAME, "local");
     }
@@ -168,7 +174,7 @@ public class Main {
         ClientSession session = null;
         int retries = 0;
         do {
-            ConnectFuture future = client.connect(config.getHost(), config.getPort());
+            ConnectFuture future = client.connect(config.getUser(), config.getHost(), config.getPort());
             future.await();
             try {
                 session = future.getSession();
@@ -184,7 +190,7 @@ public class Main {
         return session;
     }
 
-    private static SshAgent startAgent(String user, URL privateKeyUrl) {
+    private static SshAgent startAgent(String user, URL privateKeyUrl, String keyFile) {
         InputStream is = null;
         try {
             SshAgent agent = new AgentImpl();
@@ -193,6 +199,13 @@ public class Main {
             KeyPair keyPair = (KeyPair) r.readObject();
             is.close();
             agent.addIdentity(keyPair, user);
+            if (keyFile != null) {
+                String[] keyFiles = new String[]{keyFile};
+                FileKeyPairProvider fileKeyPairProvider = new FileKeyPairProvider(keyFiles);
+                for (KeyPair key : fileKeyPairProvider.loadKeys()) {
+                    agent.addIdentity(key, user);                
+                }
+            }
             return agent;
         } catch (Throwable e) {
             close(is);

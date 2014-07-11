@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.karaf</groupId>
         <artifactId>karaf</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -35,9 +35,9 @@
 
     <modules>
         <module>commands</module>
+        <module>core</module>
         <module>console</module>
         <module>ssh</module>
-        <module>help</module>
         <module>table</module>
     </modules>
 

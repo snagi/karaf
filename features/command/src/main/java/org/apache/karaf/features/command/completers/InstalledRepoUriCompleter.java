@@ -18,27 +18,33 @@ package org.apache.karaf.features.command.completers;
 
 import java.util.List;
 
-import org.apache.karaf.shell.console.completer.StringsCompleter;
-import org.apache.karaf.shell.console.Completer;
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.features.Repository;
+import org.apache.karaf.shell.api.action.lifecycle.Reference;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.api.console.CommandLine;
+import org.apache.karaf.shell.api.console.Completer;
+import org.apache.karaf.shell.api.console.Session;
+import org.apache.karaf.shell.support.completers.StringsCompleter;
 
 /**
- * {@link jline.Completor} for Feature Repository URLs.
+ * {@link Completer} for Feature Repository URLs.
  *
  * Displays a list of currently installed Feature repositories.
  *
  */
 
+@Service
 public class InstalledRepoUriCompleter implements Completer {
 
+    @Reference
     private FeaturesService featuresService;
 
     public void setFeaturesService(FeaturesService featuresService) {
         this.featuresService = featuresService;
     }
 
-    public int complete(final String buffer, final int cursor, @SuppressWarnings("rawtypes") final List candidates) {
+    public int complete(Session session, final CommandLine commandLine, final List<String> candidates) {
         StringsCompleter delegate = new StringsCompleter();
         try {
             for (Repository repository : featuresService.listRepositories()) {
@@ -47,7 +53,7 @@ public class InstalledRepoUriCompleter implements Completer {
         } catch (Exception e) {
             // Ignore
         }
-        return delegate.complete(buffer, cursor, candidates);
+        return delegate.complete(session, commandLine, candidates);
     }
 
 }

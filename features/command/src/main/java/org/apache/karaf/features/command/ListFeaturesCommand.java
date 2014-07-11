@@ -24,15 +24,23 @@ import java.util.List;
 import org.apache.karaf.features.Feature;
 import org.apache.karaf.features.FeaturesService;
 import org.apache.karaf.features.Repository;
-import org.apache.karaf.shell.commands.Command;
-import org.apache.karaf.shell.commands.Option;
-import org.apache.karaf.shell.table.ShellTable;
+import org.apache.karaf.shell.api.action.Command;
+import org.apache.karaf.shell.api.action.Option;
+import org.apache.karaf.shell.api.action.lifecycle.Service;
+import org.apache.karaf.shell.support.table.ShellTable;
 
 @Command(scope = "feature", name = "list", description = "Lists all existing features available from the defined repositories.")
+@Service
 public class ListFeaturesCommand extends FeaturesCommandSupport {
 
     @Option(name = "-i", aliases = {"--installed"}, description = "Display a list of all installed features only", required = false, multiValued = false)
     boolean onlyInstalled;
+
+    @Option(name = "-r", aliases = {"--required"}, description = "Display a list of all required features only", required = false, multiValued = false)
+    boolean onlyRequired;
+
+    @Option(name = "-s", aliases = {"--show-hidden"}, description = "Display hidden features", required = false, multiValued = false)
+    boolean showHidden;
 
     @Option(name = "-o", aliases = {"--ordered"}, description = "Display a list using alphabetical order ", required = false, multiValued = false)
     boolean ordered;
@@ -46,6 +54,7 @@ public class ListFeaturesCommand extends FeaturesCommandSupport {
         ShellTable table = new ShellTable();
         table.column("Name");
         table.column("Version");
+        table.column("Required");
         table.column("Installed");
         table.column("Repository");
         table.column("Description").maxSize(50);
@@ -62,9 +71,18 @@ public class ListFeaturesCommand extends FeaturesCommandSupport {
                     // Filter out not installed features if we only want to see the installed ones
                     continue;
                 }
+                if (onlyRequired && !featuresService.isRequired(f)) {
+                    // Filter out not installed features if we only want to see the installed ones
+                    continue;
+                }
+                if (!showHidden && f.isHidden()) {
+                    // Filter out hidden feature if not asked to display those
+                    continue;
+                }
                 table.addRow().addContent(
                         f.getName(),
                         f.getVersion(),
+                        featuresService.isRequired(f) ? "x" : "",
                         featuresService.isInstalled(f) ? "x" : "",
                         r.getName(),
                         f.getDescription());
